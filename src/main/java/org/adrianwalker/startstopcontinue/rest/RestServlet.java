@@ -9,11 +9,11 @@ import org.glassfish.jersey.server.ResourceConfig;
 
 public final class RestServlet extends ResourceConfig {
 
-  public RestServlet(final Service service, final Cache<UUID, Board> cache) {
+  public RestServlet(final Service service, final Cache<UUID, Board> cache, final int threads) {
 
     register(JacksonFeature.class);
     registerInstances(
-      new RestService(service, cache));
+      new RestService(service, cache, threads));
     
   }
 }

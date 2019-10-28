@@ -20,6 +20,7 @@ import org.glassfish.jersey.servlet.ServletContainer;
 public final class Launcher {
 
   private static final int BOARD_CACHE_SIZE = 50;
+  private static final int THREADS = 4;
   private static final String FILE_PATH = "/var/tmp/startstopcontinue";
   private static final int PORT = 8080;
   private static final String CONTEXT_PATH = "/startstopcontinue";
@@ -40,7 +41,7 @@ public final class Launcher {
     context.addServlet(
       new ServletHolder(
         new ServletContainer(
-          new RestServlet(service, cache))),
+          new RestServlet(service, cache, THREADS))),
       REST_SERVLET_PATH);
 
     context.addServlet(

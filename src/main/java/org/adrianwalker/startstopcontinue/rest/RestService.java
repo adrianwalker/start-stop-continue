@@ -2,6 +2,8 @@ package org.adrianwalker.startstopcontinue.rest;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -22,11 +24,13 @@ public class RestService {
 
   private final Service service;
   private final Cache<UUID, Board> cache;
+  private final ExecutorService executor;
 
-  public RestService(final Service service, final Cache<UUID, Board> cache) {
+  public RestService(final Service service, final Cache<UUID, Board> cache, final int threads) {
 
     this.service = service;
     this.cache = cache;
+    this.executor = Executors.newFixedThreadPool(threads);
   }
 
   @POST
@@ -38,7 +42,7 @@ public class RestService {
     final UUID boardId,
     final Note note) {
 
-    service.create(boardId, note);
+    executor.execute(() -> service.create(boardId, note));
     cacheUpdate(boardId, note, false, true);
 
     return Response.ok(note).build();
@@ -66,7 +70,7 @@ public class RestService {
     final UUID boardId,
     final Note note) {
 
-    service.update(boardId, note);
+    executor.execute(() -> service.update(boardId, note));
     cacheUpdate(boardId, note, true, true);
 
     return Response.ok(note).build();
@@ -81,7 +85,7 @@ public class RestService {
     final UUID boardId,
     final Note note) {
 
-    service.delete(boardId, note);
+    executor.execute(() -> service.delete(boardId, note));
     cacheUpdate(boardId, note, true, false);
 
     return Response.ok(note).build();
