@@ -4,16 +4,31 @@ import java.io.IOException;
 import static java.lang.String.format;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Set;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.nio.file.attribute.FileTime;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import java.util.function.Predicate;
-import static java.util.stream.Collectors.toSet;
+import java.util.stream.Collectors;
+import static java.util.stream.Collectors.toList;
 import java.util.stream.Stream;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Note;
 import org.adrianwalker.startstopcontinue.model.NoteType;
 
 public final class FileSystemDataAccess implements DataAccess {
+
+  private static final Comparator<Path> CRAETED_TIME_COMPARATOR = (p1, p2) -> {
+    try {
+      FileTime t1 = Files.readAttributes(p1, BasicFileAttributes.class).creationTime();
+      FileTime t2 = Files.readAttributes(p2, BasicFileAttributes.class).creationTime();
+      return t2.compareTo(t1);
+    } catch (final IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
+  };
 
   private final Path path;
 
@@ -112,32 +127,27 @@ public final class FileSystemDataAccess implements DataAccess {
 
   private Board readBoard(final UUID boardId) {
 
-    Set<Note> notes = readNotes(getBoardPath(boardId));
-
-    Predicate<Note> startFilter = note -> note.getType().equals(NoteType.START);
-    Predicate<Note> stopFilter = note -> note.getType().equals(NoteType.STOP);
-    Predicate<Note> continueFilter = note -> note.getType().equals(NoteType.CONTINUE);
-
-    Stream<Note> startStream = notes.stream().filter(startFilter);
-    Stream<Note> stopStream = notes.stream().filter(stopFilter);
-    Stream<Note> continueStream = notes.stream().filter(continueFilter);
+    Map<NoteType, List<Note>> notes = readNotes(getBoardPath(boardId));
 
     return new Board().setId(boardId)
-      .setStarts(startStream.collect(toSet()))
-      .setStops(stopStream.collect(toSet()))
-      .setContinues(continueStream.collect(toSet()));
+      .setStarts(notes.getOrDefault(NoteType.START, new ArrayList<>()))
+      .setStops(notes.getOrDefault(NoteType.STOP, new ArrayList<>()))
+      .setContinues(notes.getOrDefault(NoteType.CONTINUE, new ArrayList<>()));
   }
 
-  private Set<Note> readNotes(final Path boardPath) {
+  private Map<NoteType, List<Note>> readNotes(final Path boardPath) {
+
+    Stream<Path> notes;
 
     try {
-      return Files.list(boardPath)
-        .map(notePath -> readNote(notePath))
-        .collect(toSet());
-
+      notes = Files.list(boardPath);
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }
+
+    return notes.sorted(CRAETED_TIME_COMPARATOR)
+      .map(notePath -> readNote(notePath))
+      .collect(Collectors.groupingBy(Note::getType, toList()));
   }
 
   private Note readNote(final Path notePath) {

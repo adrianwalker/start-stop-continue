@@ -1,6 +1,6 @@
 package org.adrianwalker.startstopcontinue.rest;
 
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -87,11 +87,12 @@ public class RestService {
     return Response.ok(note).build();
   }
 
-  private void cacheUpdate(final UUID boardId, final Note note, final boolean remove, final boolean add) {
+  private void cacheUpdate(final UUID boardId, final Note note,
+                           final boolean remove, final boolean add) {
 
     Board board = cache.readThrough(boardId, f -> service.read(boardId));
 
-    Set<Note> notes = null;
+    List<Note> notes = null;
     switch (note.getType()) {
       case START:
         notes = board.getStarts();
@@ -107,13 +108,16 @@ public class RestService {
     if (null == notes) {
       return;
     }
+    
+    int index = notes.size();
 
     if (remove) {
+      index = notes.indexOf(note);
       notes.remove(note);
     }
 
     if (add) {
-      notes.add(note);
+      notes.add(index, note);
     }
   }
 }

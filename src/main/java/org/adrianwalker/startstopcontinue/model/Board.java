@@ -1,23 +1,23 @@
 package org.adrianwalker.startstopcontinue.model;
 
 import java.io.Serializable;
-import java.util.HashSet;
+import java.util.ArrayList;
 import java.util.Objects;
-import java.util.Set;
+import java.util.List;
 import java.util.UUID;
 
 public final class Board implements Serializable {
 
   private UUID id;
-  private Set<Note> starts;
-  private Set<Note> stops;
-  private Set<Note> continues;
+  private List<Note> starts;
+  private List<Note> stops;
+  private List<Note> continues;
 
   public Board() {
     id = UUID.randomUUID();
-    starts = new HashSet<>();
-    stops = new HashSet<>();
-    continues = new HashSet<>();
+    starts = new ArrayList<>();
+    stops = new ArrayList<>();
+    continues = new ArrayList<>();
   }
 
   public UUID getId() {
@@ -29,29 +29,29 @@ public final class Board implements Serializable {
     return this;
   }
 
-  public Set<Note> getStarts() {
+  public List<Note> getStarts() {
     return starts;
   }
 
-  public Board setStarts(final Set<Note> starts) {
+  public Board setStarts(final List<Note> starts) {
     this.starts = starts;
     return this;
   }
 
-  public Set<Note> getStops() {
+  public List<Note> getStops() {
     return stops;
   }
 
-  public Board setStops(final Set<Note> stops) {
+  public Board setStops(final List<Note> stops) {
     this.stops = stops;
     return this;
   }
 
-  public Set<Note> getContinues() {
+  public List<Note> getContinues() {
     return continues;
   }
 
-  public Board setContinues(final Set<Note> continues) {
+  public Board setContinues(final List<Note> continues) {
     this.continues = continues;
     return this;
   }
