@@ -1,19 +1,15 @@
 package org.adrianwalker.startstopcontinue.dataaccess;
 
 import java.io.IOException;
-import static java.lang.String.format;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toList;
 import java.util.stream.Stream;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Note;
-import org.adrianwalker.startstopcontinue.model.NoteType;
+import org.adrianwalker.startstopcontinue.model.Column;
 
 public final class FileSystemDataAccess implements DataAccess {
 
@@ -28,82 +24,79 @@ public final class FileSystemDataAccess implements DataAccess {
   }
 
   @Override
-  public void create(final Board board) {
+  public void createBoard(final Board board) {
 
     writeBoard(board);
   }
 
   @Override
-  public void create(final UUID boardId, final Note note) {
+  public void createNote(final UUID boardId, final Column column, final Note note) {
 
-    writeNote(boardId, note);
+    writeNote(boardId, column, note);
   }
 
   @Override
-  public Board read(final UUID boardID) {
+  public Board readBoard(final UUID boardId) {
 
-    return readBoard(boardID);
+    return new Board().setId(boardId)
+      .setStarts(readNotes(columnPath(boardId, Column.START)))
+      .setStops(readNotes(columnPath(boardId, Column.STOP)))
+      .setContinues(readNotes(columnPath(boardId, Column.CONTINUE)));
   }
 
   @Override
-  public Note read(final UUID boardId, final Note note) {
+  public void updateNote(final UUID boardId, final Column column, final Note note) {
 
-    return readNote(getNotePath(boardId, note));
+    writeNote(boardId, column, note);
   }
 
   @Override
-  public void update(final Board board) {
+  public void deleteNote(final UUID boardId, final Column column, final UUID noteId) {
 
-    writeBoard(board);
+    try {
+      Files.deleteIfExists(notePath(boardId, column, noteId));
+    } catch (final IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
   }
 
-  @Override
-  public void update(final UUID boardId, final Note note) {
-
-    writeNote(boardId, note);
-  }
-
-  @Override
-  public void delete(final UUID boardId) {
-
-    deleteBoard(boardId);
-  }
-
-  @Override
-  public void delete(final UUID boardId, final Note note) {
-
-    deleteNote(boardId, note);
-  }
-
-  private Path getBoardPath(final UUID boardId) {
+  private Path boardPath(final UUID boardId) {
 
     return getPath().resolve(boardId.toString());
   }
 
-  private Path getNotePath(final UUID boardId, final Note note) {
+  private Path columnPath(final UUID boardId, final Column column) {
 
-    return getBoardPath(boardId)
-      .resolve(format("%s-%s", note.getType().name(), note.getId()));
+    return boardPath(boardId).resolve(column.name());
+  }
+
+  private Path notePath(final UUID boardId, final Column column, UUID noteId) {
+
+    return columnPath(boardId, column)
+      .resolve(noteId.toString());
   }
 
   private void writeBoard(final Board board) throws RuntimeException {
 
-    Path boardPath = getBoardPath(board.getId());
-
     try {
-      Files.createDirectories(boardPath);
+      Files.createDirectories(boardPath(board.getId()));
+
+      for (Column column : Column.values()) {
+        Files.createDirectories(columnPath(board.getId(), column));
+      }
+
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }
 
-    board.getStarts().forEach(note -> writeNote(board.getId(), note));
-    board.getStops().forEach(note -> writeNote(board.getId(), note));
-    board.getContinues().forEach(note -> writeNote(board.getId(), note));
+    board.getStarts().forEach(note -> writeNote(board.getId(), Column.START, note));
+    board.getStops().forEach(note -> writeNote(board.getId(), Column.STOP, note));
+    board.getContinues().forEach(note -> writeNote(board.getId(), Column.CONTINUE, note));
   }
 
-  private void writeNote(final UUID boardId, final Note note) throws RuntimeException {
+  private void writeNote(final UUID boardId, final Column column, final Note note) throws RuntimeException {
 
-    Path notePath = getNotePath(boardId, note);
+    Path notePath = notePath(boardId, column, note.getId());
 
     try {
       Files.writeString(notePath, note.getText());
@@ -112,70 +105,30 @@ public final class FileSystemDataAccess implements DataAccess {
     }
   }
 
-  private Board readBoard(final UUID boardId) {
+  private List<Note> readNotes(final Path columnPath) {
 
-    Map<NoteType, List<Note>> notes = readNotes(getBoardPath(boardId));
-
-    return new Board().setId(boardId)
-      .setStarts(notes.getOrDefault(NoteType.START, new ArrayList<>()))
-      .setStops(notes.getOrDefault(NoteType.STOP, new ArrayList<>()))
-      .setContinues(notes.getOrDefault(NoteType.CONTINUE, new ArrayList<>()));
-  }
-
-  private Map<NoteType, List<Note>> readNotes(final Path boardPath) {
-
-    Stream<Path> notes;
-
+    Stream<Path> notePaths;
     try {
-      notes = Files.list(boardPath);
+      notePaths = Files.list(columnPath);
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }
 
-    return notes
+    return notePaths
       .map(notePath -> readNote(notePath))
-      .collect(Collectors.groupingBy(Note::getType, toList()));
+      .collect(toList());
   }
 
   private Note readNote(final Path notePath) {
 
     String filename = notePath.getFileName().toString();
-    NoteType type = NoteType.valueOf(filename.substring(0, filename.indexOf('-')));
-    UUID id = UUID.fromString(filename.substring(filename.indexOf('-') + 1));
+    UUID id = UUID.fromString(filename);
 
     try {
       return new Note()
         .setId(id)
-        .setType(type)
         .setText(Files.readString(notePath));
 
-    } catch (final IOException ioe) {
-      throw new RuntimeException(ioe);
-    }
-  }
-
-  private void deleteBoard(final UUID boardId) {
-
-    try {
-      Files.list(getBoardPath(boardId)).forEach(f -> {
-        try {
-          Files.deleteIfExists(f);
-        } catch (final IOException ioe) {
-          throw new RuntimeException(ioe);
-        }
-      });
-
-      Files.deleteIfExists(getBoardPath(boardId));
-
-    } catch (final IOException ioe) {
-      throw new RuntimeException(ioe);
-    }
-  }
-
-  private void deleteNote(final UUID boardId, final Note note) {
-
-    try {
-      Files.deleteIfExists(getNotePath(boardId, note));
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }

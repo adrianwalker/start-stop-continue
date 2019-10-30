@@ -7,12 +7,10 @@ import java.util.UUID;
 public final class Note implements Serializable {
 
   private UUID id;
-  private NoteType type;
   private String text;
 
   public Note() {
     id = UUID.randomUUID();
-    text = "";
   }
 
   public UUID getId() {
@@ -21,15 +19,6 @@ public final class Note implements Serializable {
 
   public Note setId(final UUID id) {
     this.id = id;
-    return this;
-  }
-
-  public NoteType getType() {
-    return type;
-  }
-
-  public Note setType(final NoteType type) {
-    this.type = type;
     return this;
   }
 

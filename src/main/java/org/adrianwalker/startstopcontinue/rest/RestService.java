@@ -16,6 +16,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.model.Board;
+import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.service.Service;
 import org.adrianwalker.startstopcontinue.model.Note;
 
@@ -33,21 +34,6 @@ public class RestService {
     this.executor = Executors.newFixedThreadPool(threads);
   }
 
-  @POST
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_JSON)
-  @Path("board/{boardId}/note")
-  public Response create(
-    @PathParam("boardId")
-    final UUID boardId,
-    final Note note) {
-
-    executor.execute(() -> service.create(boardId, note));
-    cacheUpdate(boardId, note, false, true);
-
-    return Response.ok(note).build();
-  }
-
   @GET
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
@@ -57,47 +43,90 @@ public class RestService {
     final UUID boardId) {
 
     return Response
-      .ok(cache.readThrough(boardId, f -> service.read(boardId)))
+      .ok(cache.readThrough(boardId, f -> service.readBoard(boardId)))
       .build();
+  }
+
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("board/{boardId}/column/{column}/note")
+  public Response create(
+    @PathParam("boardId")
+    final UUID boardId,
+    @PathParam("column")
+    final Column column,
+    final Note note) {
+
+    executor.execute(() -> service.createNote(boardId, column, note));
+    cacheAdd(boardId, column, note);
+
+    return Response.ok(note).build();
   }
 
   @PUT
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("board/{boardId}/note")
+  @Path("board/{boardId}/column/{column}/note")
   public Response update(
     @PathParam("boardId")
     final UUID boardId,
+    @PathParam("column")
+    final Column column,
     final Note note) {
 
-    executor.execute(() -> service.update(boardId, note));
-    cacheUpdate(boardId, note, true, true);
+    executor.execute(() -> service.updateNote(boardId, column, note));
+    cacheUpdate(boardId, column, note);
 
-    return Response.ok(note).build();
+    return Response.accepted().build();
   }
 
   @DELETE
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
-  @Path("board/{boardId}/note")
+  @Path("board/{boardId}/column/{column}/note/{noteId}")
   public Response delete(
     @PathParam("boardId")
     final UUID boardId,
-    final Note note) {
+    @PathParam("column")
+    final Column column,
+    @PathParam("noteId")
+    final UUID noteId) {
 
-    executor.execute(() -> service.delete(boardId, note));
-    cacheUpdate(boardId, note, true, false);
+    executor.execute(() -> service.deleteNote(boardId, column, noteId));
+    cacheDelete(boardId, column, noteId);
 
-    return Response.ok(note).build();
+    return Response.ok(new Note().setId(noteId)).build();
   }
 
-  private void cacheUpdate(final UUID boardId, final Note note,
-                           final boolean remove, final boolean add) {
+  private void cacheAdd(final UUID boardId, final Column column, final Note note) {
 
-    Board board = cache.readThrough(boardId, f -> service.read(boardId));
+    Board board = cache.readThrough(boardId, f -> service.readBoard(boardId));
+    List<Note> notes = notes(board, column);
+    notes.add(note);
+  }
+
+  private void cacheUpdate(final UUID boardId, final Column column, final Note note) {
+
+    Board board = cache.readThrough(boardId, f -> service.readBoard(boardId));
+    List<Note> notes = notes(board, column);
+
+    int index = notes.indexOf(note);
+    notes.remove(note);
+    notes.add(index, note);
+  }
+
+  private void cacheDelete(final UUID boardId, final Column column, final UUID noteId) {
+
+    Board board = cache.readThrough(boardId, f -> service.readBoard(boardId));
+    List<Note> notes = notes(board, column);
+    notes.remove(new Note().setId(noteId));
+  }
+
+  private List<Note> notes(final Board board, final Column column) {
 
     List<Note> notes = null;
-    switch (note.getType()) {
+    switch (column) {
       case START:
         notes = board.getStarts();
         break;
@@ -108,20 +137,6 @@ public class RestService {
         notes = board.getContinues();
         break;
     }
-
-    if (null == notes) {
-      return;
-    }
-    
-    int index = notes.size();
-
-    if (remove) {
-      index = notes.indexOf(note);
-      notes.remove(note);
-    }
-
-    if (add) {
-      notes.add(index, note);
-    }
+    return notes;
   }
 }

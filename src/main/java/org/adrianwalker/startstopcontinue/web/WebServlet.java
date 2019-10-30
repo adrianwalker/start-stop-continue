@@ -34,7 +34,7 @@ public final class WebServlet extends VelocityViewServlet {
     if (null == boardId) {
 
       Board board = new Board();
-      service.create(board);
+      service.createBoard(board);
 
       String url = format(REDIRECT_URL, request.getRequestURL().toString(), board.getId().toString());
       try {

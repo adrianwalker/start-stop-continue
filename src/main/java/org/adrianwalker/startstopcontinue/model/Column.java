@@ -1,5 +1,5 @@
 package org.adrianwalker.startstopcontinue.model;
 
-public enum NoteType {
+public enum Column {
   START, STOP, CONTINUE;
 }

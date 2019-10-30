@@ -2,7 +2,19 @@ $(document).ready(function () {
 
   loadBoard(boardId);
 
-  function note(id, text) {
+  $("#add-start").click(function () {
+    addNote($("#start-list"), boardId, "START", "Start ");
+  });
+
+  $("#add-stop").click(function () {
+    addNote($("#stop-list"), boardId, "STOP", "Stop ");
+  });
+
+  $("#add-continue").click(function () {
+    addNote($("#continue-list"), boardId, "CONTINUE", "Continue ");
+  });
+
+  function noteHtml(id, text) {
 
     return '<li id="' + id + '" >'
             + '  <textarea>' + text + '</textarea>'
@@ -17,89 +29,78 @@ $(document).ready(function () {
       type: 'GET',
       contentType: 'application/json'
     }).done(function (data) {
+
       $(data.starts).each(function (index, data) {
-        loadNote($("#start-list"), data);
+        loadNote($("#start-list"), boardId, 'START', data);
       });
+
       $(data.stops).each(function (index, data) {
-        loadNote($("#stop-list"), data);
+        loadNote($("#stop-list"), boardId, 'STOP', data);
       });
+
       $(data.continues).each(function (index, data) {
-        loadNote($("#continue-list"), data);
+        loadNote($("#continue-list"), boardId, 'CONTINUE', data);
       });
     });
   }
 
-  function loadNote(list, data) {
+  function loadNote(list, boardId, column, note) {
 
-    list.append(note(data.id, data.text));
-    list.on('focusout', '#' + data.id, function () {
+    list.append(noteHtml(note.id, note.text));
+    list.on('focusout', '#' + note.id, function () {
 
       var text = $("#" + this.id + " textarea").val().trim();
       if (text === "") {
 
-        deleteNote(data.id, data.type).done(function (data) {
+        deleteNote(boardId, column, note.id).done(function (data) {
           $("#" + data.id).remove();
         });
 
       } else {
 
-        updateNote(data.id, data.type, text);
+        updateNote(boardId, column, note.id, text);
       }
     });
   }
 
-  function saveNote(type, text) {
+  function saveNote(boardId, column, text) {
 
-    var url = "api/board/" + boardId + "/note";
-    var data = JSON.stringify({type: type, text: text});
+    var url = "api/board/" + boardId + "/column/" + column + "/note";
+    var note = JSON.stringify({text: text});
     return $.ajax({
       url: url,
-      data: data,
+      data: note,
       type: 'POST',
       contentType: 'application/json'
     });
   }
 
-  function updateNote(noteId, type, text) {
+  function updateNote(boardId, column, noteId, text) {
 
-    var url = "api/board/" + boardId + "/note";
-    var data = JSON.stringify({id: noteId, type: type, text: text});
+    var url = "api/board/" + boardId + "/column/" + column + "/note";
+    var note = JSON.stringify({id: noteId, text: text});
     return $.ajax({
       url: url,
-      data: data,
+      data: note,
       type: 'PUT',
       contentType: 'application/json'
     });
   }
 
-  function deleteNote(noteId, type) {
+  function deleteNote(boardId, column, noteId) {
 
-    var url = "api/board/" + boardId + "/note";
-    var data = JSON.stringify({id: noteId, type: type});
+    var url = "api/board/" + boardId + "/column/" + column + "/note/" + noteId;
     return $.ajax({
       url: url,
-      data: data,
       type: 'DELETE',
       contentType: 'application/json'
     });
   }
 
-  function addNote(list, type, text) {
+  function addNote(list, boardId, column, text) {
 
-    saveNote(type, text).done(function (data) {
-      loadNote(list, data);
+    saveNote(boardId, column, text).done(function (data) {
+      loadNote(list, boardId, column, data);
     });
   }
-
-  $("#add-start").click(function () {
-    addNote($("#start-list"), "START", "Start ");
-  });
-
-  $("#add-stop").click(function () {
-    addNote($("#stop-list"), "STOP", "Stop ");
-  });
-
-  $("#add-continue").click(function () {
-    addNote($("#continue-list"), "CONTINUE", "Continue ");
-  });
 });
