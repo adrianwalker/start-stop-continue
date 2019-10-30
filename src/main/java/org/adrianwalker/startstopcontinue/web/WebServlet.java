@@ -13,7 +13,7 @@ import org.apache.velocity.tools.view.VelocityViewServlet;
 public final class WebServlet extends VelocityViewServlet {
 
   private static final String BOARD_ID = "boardid";
-  private static final String REDIRECT_URL = "%s?" + BOARD_ID + "=%s";
+  private static final String BOARD_ID_QUERY_PARAM = "?" + BOARD_ID + "=%s";
 
   private final Service service;
 
@@ -36,14 +36,14 @@ public final class WebServlet extends VelocityViewServlet {
       Board board = new Board();
       service.createBoard(board);
 
-      String url = format(REDIRECT_URL, request.getRequestURL().toString(), board.getId().toString());
+      String url = format(BOARD_ID_QUERY_PARAM, board.getId().toString());
       try {
         response.sendRedirect(url);
       } catch (final IOException ioe) {
         throw new RuntimeException(ioe);
       }
     }
-    
+
     context.put("boardId", boardId);
 
     return getTemplate("index.html");
