@@ -38,7 +38,7 @@ public class RestService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("board/{boardId}")
-  public Response read(
+  public Response readBoard(
     @PathParam("boardId")
     final UUID boardId) {
 
@@ -51,7 +51,7 @@ public class RestService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("board/{boardId}/column/{column}/note")
-  public Response create(
+  public Response createNote(
     @PathParam("boardId")
     final UUID boardId,
     @PathParam("column")
@@ -68,7 +68,7 @@ public class RestService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("board/{boardId}/column/{column}/note")
-  public Response update(
+  public Response updateNote(
     @PathParam("boardId")
     final UUID boardId,
     @PathParam("column")
@@ -85,7 +85,7 @@ public class RestService {
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
   @Path("board/{boardId}/column/{column}/note/{noteId}")
-  public Response delete(
+  public Response deleteNote(
     @PathParam("boardId")
     final UUID boardId,
     @PathParam("column")
