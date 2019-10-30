@@ -145,6 +145,6 @@ public class RestService {
   }
 
   private static Note escapeTags(final Note note) {
-    return note.setText(note.getText().replaceAll("<", "").replaceAll(">", "&gt;"));
+    return note.setText(note.getText().replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
   }
 }
