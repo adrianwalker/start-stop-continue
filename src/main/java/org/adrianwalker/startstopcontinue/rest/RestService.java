@@ -58,6 +58,8 @@ public class RestService {
     final Column column,
     final Note note) {
 
+    escapeTags(note);
+
     executor.execute(() -> service.createNote(boardId, column, note));
     cacheAdd(boardId, column, note);
 
@@ -74,6 +76,8 @@ public class RestService {
     @PathParam("column")
     final Column column,
     final Note note) {
+
+    escapeTags(note);
 
     executor.execute(() -> service.updateNote(boardId, column, note));
     cacheUpdate(boardId, column, note);
@@ -138,5 +142,9 @@ public class RestService {
         break;
     }
     return notes;
+  }
+
+  private static Note escapeTags(final Note note) {
+    return note.setText(note.getText().replaceAll("<", "").replaceAll(">", "&gt;"));
   }
 }
