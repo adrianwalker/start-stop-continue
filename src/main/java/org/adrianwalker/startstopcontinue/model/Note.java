@@ -7,6 +7,7 @@ import java.util.UUID;
 public final class Note implements Serializable {
 
   private UUID id;
+  private String color;
   private String text;
 
   public Note() {
@@ -19,6 +20,15 @@ public final class Note implements Serializable {
 
   public Note setId(final UUID id) {
     this.id = id;
+    return this;
+  }
+
+  public String getColor() {
+    return color;
+  }
+
+  public Note setColor(final String color) {
+    this.color = color;
     return this;
   }
 

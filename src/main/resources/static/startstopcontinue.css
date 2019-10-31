@@ -13,10 +13,6 @@ div{
   width: 33%;
   float: left;
 }
-h2,p{
-  font-size:140%;
-  font-weight:normal;
-}
 ul,li{
   list-style:none;
 }
@@ -27,7 +23,6 @@ ul{
 ul li{
   text-decoration:none;
   color:#000;
-  background:#ffc;
   display:block;
   height:10em;
   width:10em;
@@ -72,7 +67,6 @@ ul li:nth-child(even){
   -moz-transform:rotate(4deg);
   position:relative;
   top:5px;
-  background:#cfc;
 }
 ul li:nth-child(3n){
   -o-transform:rotate(-3deg);
@@ -80,7 +74,6 @@ ul li:nth-child(3n){
   -moz-transform:rotate(-3deg);
   position:relative;
   top:-5px;
-  background:#ccf;
 }
 ul li:nth-child(5n){
   -o-transform:rotate(5deg);
@@ -106,8 +99,11 @@ ol{
 }
 ol li{
   display:inline;
-  padding-right:1em;
 }
 ol li a{
   color:#fff;
+}
+ol li input[type="color"]{
+	border: none;
+	background: none;
 }

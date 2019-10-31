@@ -116,8 +116,7 @@ public class RestService {
     List<Note> notes = notes(board, column);
 
     int index = notes.indexOf(note);
-    notes.remove(note);
-    notes.add(index, note);
+    notes.get(index).setText(note.getText());
   }
 
   private void cacheDelete(final UUID boardId, final Column column, final UUID noteId) {

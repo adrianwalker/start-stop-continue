@@ -13,6 +13,7 @@ import org.adrianwalker.startstopcontinue.model.Column;
 
 public final class FileSystemDataAccess implements DataAccess {
 
+  private static final int COLOR_FIELD_LENGTH = 7;
   private final Path path;
 
   public FileSystemDataAccess(final Path path) {
@@ -97,9 +98,10 @@ public final class FileSystemDataAccess implements DataAccess {
   private void writeNote(final UUID boardId, final Column column, final Note note) throws RuntimeException {
 
     Path notePath = notePath(boardId, column, note.getId());
+    String content = note.getColor() + note.getText();
 
     try {
-      Files.writeString(notePath, note.getText());
+      Files.writeString(notePath, content);
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }
@@ -125,9 +127,14 @@ public final class FileSystemDataAccess implements DataAccess {
     UUID id = UUID.fromString(filename);
 
     try {
+      String content = Files.readString(notePath);
+      String color = content.substring(0, COLOR_FIELD_LENGTH);
+      String text = content.substring(COLOR_FIELD_LENGTH);
+
       return new Note()
         .setId(id)
-        .setText(Files.readString(notePath));
+        .setColor(color)
+        .setText(text);
 
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);

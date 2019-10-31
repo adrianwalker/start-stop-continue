@@ -3,20 +3,20 @@ $(document).ready(function () {
   loadBoard(boardId);
 
   $("#add-start").click(function () {
-    addNote($("#start-list"), boardId, "START", "Start ");
+    addNote($("#start-list"), boardId, "START", $("#start-color").val(), "Start ");
   });
 
   $("#add-stop").click(function () {
-    addNote($("#stop-list"), boardId, "STOP", "Stop ");
+    addNote($("#stop-list"), boardId, "STOP", $("#stop-color").val(), "Stop ");
   });
 
   $("#add-continue").click(function () {
-    addNote($("#continue-list"), boardId, "CONTINUE", "Continue ");
+    addNote($("#continue-list"), boardId, "CONTINUE", $("#continue-color").val(), "Continue ");
   });
 
-  function noteHtml(id, text) {
+  function noteHtml(id, color, text) {
 
-    return '<li id="' + id + '" >'
+    return '<li id="' + id + '" style="background-color: ' + color + '">'
             + '  <textarea>' + text + '</textarea>'
             + '</li>';
   }
@@ -46,7 +46,7 @@ $(document).ready(function () {
 
   function loadNote(list, boardId, column, note) {
 
-    list.append(noteHtml(note.id, note.text));
+    list.append(noteHtml(note.id, note.color, note.text));
     list.on('focusout', '#' + note.id, function () {
 
       var text = $("#" + this.id + " textarea").val().trim();
@@ -63,10 +63,10 @@ $(document).ready(function () {
     });
   }
 
-  function saveNote(boardId, column, text) {
+  function saveNote(boardId, column, color, text) {
 
     var url = "api/board/" + boardId + "/column/" + column + "/note";
-    var note = JSON.stringify({text: text});
+    var note = JSON.stringify({color: color, text: text});
     return $.ajax({
       url: url,
       data: note,
@@ -97,9 +97,9 @@ $(document).ready(function () {
     });
   }
 
-  function addNote(list, boardId, column, text) {
+  function addNote(list, boardId, column, color, text) {
 
-    saveNote(boardId, column, text).done(function (data) {
+    saveNote(boardId, column, color, text).done(function (data) {
       loadNote(list, boardId, column, data);
     });
   }
