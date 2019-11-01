@@ -1,31 +1,34 @@
-*{
+* {
   margin:0;
   padding:0;
 }
-body{
+body {
   font-family:arial,sans-serif;
   font-size:100%;
   margin-top: 1em;
   background:#666;
   color:#fff;
 }
-div{
+div {
+  margin-top: 3em;
   width: 33%;
   float: left;
+  text-align: center;
 }
-ul,li{
+ul,li {
   list-style:none;
+  display: inline-block;
 }
-ul{
+ul {
   overflow:hidden;
   padding:1em;
 }
-ul li{
+ul li {
   text-decoration:none;
   color:#000;
   display:block;
-  height:10em;
-  width:10em;
+  height:12em;
+  width:12em;
   padding:1em;
   -moz-box-shadow:5px 5px 7px rgba(33,33,33,1);
   -webkit-box-shadow: 5px 5px 7px rgba(33,33,33,.7);
@@ -34,18 +37,13 @@ ul li{
   -o-transition:-o-transform .15s linear;
   -webkit-transition:-webkit-transform .15s linear;
 }
-ul li{
+ul li {
   margin:1em;
-  float:left;
+  display: inline-block;
 }
-ul li h2{
-  font-size:140%;
-  font-weight:bold;
-  padding-bottom:10px;
-}
-ul li textarea{
+ul li textarea {
   font-family:"Reenie Beanie",arial,sans-serif;
-  font-size:140%;
+  font-size:150%;
   display:inline-block;
   width: inherit;
   height: inherit;
@@ -56,33 +54,33 @@ ul li textarea{
   background: none;
   border: none;
 }
-ul li{
+ul li {
   -webkit-transform: rotate(-6deg);
   -o-transform: rotate(-6deg);
   -moz-transform:rotate(-6deg);
 }
-ul li:nth-child(even){
+ul li:nth-child(even) {
   -o-transform:rotate(4deg);
   -webkit-transform:rotate(4deg);
   -moz-transform:rotate(4deg);
   position:relative;
   top:5px;
 }
-ul li:nth-child(3n){
+ul li:nth-child(3n) {
   -o-transform:rotate(-3deg);
   -webkit-transform:rotate(-3deg);
   -moz-transform:rotate(-3deg);
   position:relative;
   top:-5px;
 }
-ul li:nth-child(5n){
+ul li:nth-child(5n) {
   -o-transform:rotate(5deg);
   -webkit-transform:rotate(5deg);
   -moz-transform:rotate(5deg);
   position:relative;
   top:-10px;
 }
-ul li:hover,ul li:focus{
+ul li:hover,ul li:focus {
   box-shadow:10px 10px 7px rgba(0,0,0,.7);
   -moz-box-shadow:10px 10px 7px rgba(0,0,0,.7);
   -webkit-box-shadow: 10px 10px 7px rgba(0,0,0,.7);
@@ -92,18 +90,29 @@ ul li:hover,ul li:focus{
   position:relative;
   z-index:5;
 }
-ol{
+ol {
   text-align:center;
-  font-family:"Reenie Beanie",arial,sans-serif;
-  font-size:180%;
+  position: fixed;
+  padding: 1em;
+  top: 0;
+  width: inherit;
+  z-index: 1000;
+  background:#666;
 }
-ol li{
+ol li {
   display:inline;
 }
-ol li a{
+ol li button {
   color:#fff;
+  background: none;
+  border: none;
+  padding: 0;
+  font-family:"Reenie Beanie",arial,sans-serif;
+  font-size:175%;
+  text-decoration: underline;
+  cursor: pointer;
 }
-ol li input[type="color"]{
+ol li input[type="color"] {
 	border: none;
 	background: none;
 }

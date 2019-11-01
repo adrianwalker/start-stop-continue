@@ -1,5 +1,6 @@
 package org.adrianwalker.startstopcontinue.service;
 
+import static java.lang.Math.min;
 import java.util.UUID;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
@@ -9,9 +10,11 @@ import org.adrianwalker.startstopcontinue.model.Note;
 public final class Service {
 
   private final DataAccess dataAccess;
+  private final int maxNoteLength;
 
-  public Service(final DataAccess dataAccess) {
+  public Service(final DataAccess dataAccess, final int maxNoteLength) {
     this.dataAccess = dataAccess;
+    this.maxNoteLength = maxNoteLength;
   }
 
   public final void createBoard(final Board board) {
@@ -20,6 +23,11 @@ public final class Service {
   }
 
   public final void createNote(final UUID boardId, final Column column, final Note note) {
+
+    if (maxNoteLength > 0) {
+      String text = note.getText();
+      note.setText(text.substring(0, min(text.length(), maxNoteLength)));
+    }
 
     dataAccess.createNote(boardId, column, note);
   }

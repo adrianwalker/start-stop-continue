@@ -29,10 +29,11 @@ public final class Launcher {
   private static final String DEFAULT_SERVLET_PATH = "/";
   private static final String[] WELCOME_FILES = {"index.html"};
   private static final String BASE_RESOURCE = "static/";
+  private static final int MAX_NOTE_LENGTH = 1024;
 
   public static void main(final String[] args) throws Exception {
 
-    Service service = new Service(new FileSystemDataAccess(Path.of(FILE_PATH)));
+    Service service = new Service(new FileSystemDataAccess(Path.of(FILE_PATH)), MAX_NOTE_LENGTH);
     Cache<UUID, Board> cache = new Cache<>(BOARD_CACHE_SIZE);
 
     Server server = createServer(PORT);
