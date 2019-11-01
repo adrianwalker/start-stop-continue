@@ -24,10 +24,7 @@ public final class Service {
 
   public final void createNote(final UUID boardId, final Column column, final Note note) {
 
-    if (maxNoteLength > 0) {
-      String text = note.getText();
-      note.setText(text.substring(0, min(text.length(), maxNoteLength)));
-    }
+    truncateNoteText(note);
 
     dataAccess.createNote(boardId, column, note);
   }
@@ -39,11 +36,21 @@ public final class Service {
 
   public final void updateNote(final UUID boardId, final Column column, final Note note) {
 
+    truncateNoteText(note);
+
     dataAccess.updateNote(boardId, column, note);
   }
 
   public final void deleteNote(final UUID boardId, final Column column, final UUID noteId) {
 
     dataAccess.deleteNote(boardId, column, noteId);
+  }
+
+  private void truncateNoteText(final Note note) {
+
+    if (maxNoteLength > 0) {
+      String text = note.getText();
+      note.setText(text.substring(0, min(text.length(), maxNoteLength)));
+    }
   }
 }

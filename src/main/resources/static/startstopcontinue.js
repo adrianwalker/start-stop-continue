@@ -58,7 +58,7 @@ $(document).ready(function () {
 
       } else {
 
-        updateNote(boardId, column, note.id, text);
+        updateNote(boardId, column, note.color, note.id, text);
       }
     });
   }
@@ -75,10 +75,10 @@ $(document).ready(function () {
     });
   }
 
-  function updateNote(boardId, column, noteId, text) {
+  function updateNote(boardId, column, color, noteId, text) {
 
     var url = "api/board/" + boardId + "/column/" + column + "/note";
-    var note = JSON.stringify({id: noteId, text: text});
+    var note = JSON.stringify({id: noteId, color: color, text: text});
     return $.ajax({
       url: url,
       data: note,
