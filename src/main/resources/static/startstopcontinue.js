@@ -5,21 +5,21 @@ $(document).ready(function () {
   var COLUMNS = {
     "START": $("#start-list"),
     "STOP": $("#stop-list"),
-    "CONTINUE": $("#continue-list"),
-  }
+    "CONTINUE": $("#continue-list")
+  };
 
   loadBoard(boardId);
 
   $("#add-start").click(function () {
-    addNote(boardId, "START", $("#start-color").val(), "Start ");
+    addNote(boardId, "START", {color: $("#start-color").val(), text: "Start "});
   });
 
   $("#add-stop").click(function () {
-    addNote(boardId, "STOP", $("#stop-color").val(), "Stop ");
+    addNote(boardId, "STOP", {color: $("#stop-color").val(), text: "Stop "});
   });
 
   $("#add-continue").click(function () {
-    addNote(boardId, "CONTINUE", $("#continue-color").val(), "Continue ");
+    addNote(boardId, "CONTINUE", {color: $("#continue-color").val(), text: "Continue "});
   });
 
   function noteHtml(id, color, text) {
@@ -52,6 +52,13 @@ $(document).ready(function () {
     });
   }
 
+  function addNote(boardId, column, note) {
+
+    saveNote(boardId, column, note).done(function (data) {
+      loadNote(boardId, column, {id: data.id, color: note.color, text: note.text});
+    });
+  }
+
   function loadNote(boardId, column, note) {
 
     COLUMNS[column].append(noteHtml(note.id, note.color, note.text));
@@ -65,31 +72,26 @@ $(document).ready(function () {
         });
 
       } else {
-
-        updateNote(boardId, column, note.id, text);
+        updateNote(boardId, column, {id: note.id, text: text});
       }
     });
   }
 
-  function saveNote(boardId, column, color, text) {
+  function saveNote(boardId, column, note) {
 
-    var url = "api/board/" + boardId + "/column/" + column + "/note";
-    var note = JSON.stringify({color: color, text: text});
     return $.ajax({
-      url: url,
-      data: note,
+      url: "api/board/" + boardId + "/column/" + column + "/note",
+      data: JSON.stringify(note),
       type: 'POST',
       contentType: 'application/json'
     });
   }
 
-  function updateNote(boardId, column, noteId, text) {
+  function updateNote(boardId, column, note) {
 
-    var url = "api/board/" + boardId + "/column/" + column + "/note";
-    var note = JSON.stringify({id: noteId, text: text});
     return $.ajax({
-      url: url,
-      data: note,
+      url: "api/board/" + boardId + "/column/" + column + "/note",
+      data: JSON.stringify(note),
       type: 'PUT',
       contentType: 'application/json'
     });
@@ -97,18 +99,10 @@ $(document).ready(function () {
 
   function deleteNote(boardId, column, noteId) {
 
-    var url = "api/board/" + boardId + "/column/" + column + "/note/" + noteId;
     return $.ajax({
-      url: url,
+      url: "api/board/" + boardId + "/column/" + column + "/note/" + noteId,
       type: 'DELETE',
       contentType: 'application/json'
-    });
-  }
-
-  function addNote(boardId, column, color, text) {
-
-    saveNote(boardId, column, color, text).done(function (data) {
-      loadNote(boardId, column, data);
     });
   }
 });

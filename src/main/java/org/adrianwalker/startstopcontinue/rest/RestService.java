@@ -12,8 +12,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import org.adrianwalker.startstopcontinue.model.Column;
-import org.adrianwalker.startstopcontinue.service.Service;
+import org.adrianwalker.startstopcontinue.model.ID;
 import org.adrianwalker.startstopcontinue.model.Note;
+import org.adrianwalker.startstopcontinue.service.Service;
 
 @Path("")
 public class RestService {
@@ -23,7 +24,6 @@ public class RestService {
   public RestService(final Service service) {
 
     this.service = service;
-
   }
 
   @GET
@@ -52,7 +52,7 @@ public class RestService {
 
     service.createNote(boardId, column, escapeTags(note));
 
-    return Response.ok(note).build();
+    return Response.ok(new ID().setId(note.getId())).build();
   }
 
   @PUT
@@ -68,7 +68,7 @@ public class RestService {
 
     service.updateNote(boardId, column, escapeTags(note));
 
-    return Response.accepted().build();
+    return Response.ok(new ID().setId(note.getId())).build();
   }
 
   @DELETE
@@ -85,7 +85,7 @@ public class RestService {
 
     service.deleteNote(boardId, column, noteId);
 
-    return Response.ok(new Note().setId(noteId)).build();
+    return Response.ok(new ID().setId(noteId)).build();
   }
 
   private static Note escapeTags(final Note note) {

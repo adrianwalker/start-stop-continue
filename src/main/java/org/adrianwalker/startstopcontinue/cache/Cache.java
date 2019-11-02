@@ -11,16 +11,21 @@ public final class Cache<T, R> {
   private static final boolean ACCESS_ORDER = true;
   private final Map<T, R> cache;
 
-  public Cache(final int cacheSize) {
+  public Cache(final int cacheSize, final boolean sync) {
 
-    cache = Collections.synchronizedMap(
-      new LinkedHashMap(cacheSize + 1, LOAD_FACTOR, ACCESS_ORDER) {
+    LinkedHashMap map = new LinkedHashMap(cacheSize + 1, LOAD_FACTOR, ACCESS_ORDER) {
 
       @Override
       public boolean removeEldestEntry(final Map.Entry eldest) {
         return size() > cacheSize;
       }
-    });
+    };
+
+    if (sync) {
+      this.cache = Collections.synchronizedMap(map);
+    } else {
+      this.cache = map;
+    }
   }
 
   public R readThrough(final T key, final Function<T, R> f) {

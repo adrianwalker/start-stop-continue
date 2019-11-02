@@ -1,6 +1,5 @@
 package org.adrianwalker.startstopcontinue;
 
-import java.nio.file.Path;
 import java.util.UUID;
 import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.dataaccess.JsonFileSystemDataAccess;
@@ -19,25 +18,22 @@ import org.glassfish.jersey.servlet.ServletContainer;
 
 public final class Launcher {
 
-  private static final int BOARD_CACHE_SIZE = 32;
-  private static final int PERSISTENCE_THREADS = 4;
-  private static final Path FILE_PATH = Path.of("/var/tmp/startstopcontinue");
-  private static final int PORT = 8080;
   private static final String CONTEXT_PATH = "/startstopcontinue";
   private static final String REST_SERVLET_PATH = "/api/*";
   private static final String WEB_SERVLET_PATH = "/index.html";
   private static final String DEFAULT_SERVLET_PATH = "/";
   private static final String[] WELCOME_FILES = {"index.html"};
   private static final String BASE_RESOURCE = "static/";
-  private static final int MAX_NOTE_LENGTH = 1024;
 
   public static void main(final String[] args) throws Exception {
 
-    JsonFileSystemDataAccess dataAccess = new JsonFileSystemDataAccess(FILE_PATH);
-    Cache<UUID, Board> cache = new Cache<>(BOARD_CACHE_SIZE);
-    Service service = new Service(dataAccess, cache, PERSISTENCE_THREADS, MAX_NOTE_LENGTH);
+    Configuration config = new Configuration();
 
-    Server server = createServer(PORT);
+    JsonFileSystemDataAccess dataAccess = new JsonFileSystemDataAccess(config.getDataPath());
+    Cache<UUID, Board> cache = new Cache<>(config.getCacheSize(), config.getCacheSync());
+    Service service = new Service(dataAccess, cache, config.getDataThreads(), config.getDataSize());
+
+    Server server = createServer(config.getHttpPort());
     ServletContextHandler context = createContext(CONTEXT_PATH, BASE_RESOURCE, WELCOME_FILES);
 
     context.addServlet(
