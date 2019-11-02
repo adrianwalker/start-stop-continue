@@ -52,10 +52,21 @@ $(document).ready(function () {
     });
   }
 
+  function scrollNote(noteId) {
+
+    var note = $("#" + noteId);
+    var header = note.parent().siblings();
+
+    $('html, body').animate({
+      scrollTop: note.offset().top - header.outerHeight()
+    }, 500);
+  }
+
   function addNote(boardId, column, note) {
 
     saveNote(boardId, column, note).done(function (data) {
       loadNote(boardId, column, {id: data.id, color: note.color, text: note.text});
+      scrollNote(data.id);
     });
   }
 
