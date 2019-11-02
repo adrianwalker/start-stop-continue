@@ -1,17 +1,25 @@
+"use strict";
+
 $(document).ready(function () {
+
+  var COLUMNS = {
+    "START": $("#start-list"),
+    "STOP": $("#stop-list"),
+    "CONTINUE": $("#continue-list"),
+  }
 
   loadBoard(boardId);
 
   $("#add-start").click(function () {
-    addNote($("#start-list"), boardId, "START", $("#start-color").val(), "Start ");
+    addNote(boardId, "START", $("#start-color").val(), "Start ");
   });
 
   $("#add-stop").click(function () {
-    addNote($("#stop-list"), boardId, "STOP", $("#stop-color").val(), "Stop ");
+    addNote(boardId, "STOP", $("#stop-color").val(), "Stop ");
   });
 
   $("#add-continue").click(function () {
-    addNote($("#continue-list"), boardId, "CONTINUE", $("#continue-color").val(), "Continue ");
+    addNote(boardId, "CONTINUE", $("#continue-color").val(), "Continue ");
   });
 
   function noteHtml(id, color, text) {
@@ -31,23 +39,23 @@ $(document).ready(function () {
     }).done(function (data) {
 
       $(data.starts).each(function (index, data) {
-        loadNote($("#start-list"), boardId, 'START', data);
+        loadNote(boardId, 'START', data);
       });
 
       $(data.stops).each(function (index, data) {
-        loadNote($("#stop-list"), boardId, 'STOP', data);
+        loadNote(boardId, 'STOP', data);
       });
 
       $(data.continues).each(function (index, data) {
-        loadNote($("#continue-list"), boardId, 'CONTINUE', data);
+        loadNote(boardId, 'CONTINUE', data);
       });
     });
   }
 
-  function loadNote(list, boardId, column, note) {
+  function loadNote(boardId, column, note) {
 
-    list.append(noteHtml(note.id, note.color, note.text));
-    list.on('focusout', '#' + note.id, function () {
+    COLUMNS[column].append(noteHtml(note.id, note.color, note.text));
+    COLUMNS[column].on('focusout', '#' + note.id, function () {
 
       var text = $("#" + this.id + " textarea").val().trim();
       if (text === "") {
@@ -58,7 +66,7 @@ $(document).ready(function () {
 
       } else {
 
-        updateNote(boardId, column, note.color, note.id, text);
+        updateNote(boardId, column, note.id, text);
       }
     });
   }
@@ -75,10 +83,10 @@ $(document).ready(function () {
     });
   }
 
-  function updateNote(boardId, column, color, noteId, text) {
+  function updateNote(boardId, column, noteId, text) {
 
     var url = "api/board/" + boardId + "/column/" + column + "/note";
-    var note = JSON.stringify({id: noteId, color: color, text: text});
+    var note = JSON.stringify({id: noteId, text: text});
     return $.ajax({
       url: url,
       data: note,
@@ -97,10 +105,10 @@ $(document).ready(function () {
     });
   }
 
-  function addNote(list, boardId, column, color, text) {
+  function addNote(boardId, column, color, text) {
 
     saveNote(boardId, column, color, text).done(function (data) {
-      loadNote(list, boardId, column, data);
+      loadNote(boardId, column, data);
     });
   }
 });

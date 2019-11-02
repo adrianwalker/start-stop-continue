@@ -1,9 +1,6 @@
 package org.adrianwalker.startstopcontinue.rest;
 
-import java.util.List;
 import java.util.UUID;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
 import javax.ws.rs.GET;
@@ -14,8 +11,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import org.adrianwalker.startstopcontinue.cache.Cache;
-import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.service.Service;
 import org.adrianwalker.startstopcontinue.model.Note;
@@ -24,14 +19,11 @@ import org.adrianwalker.startstopcontinue.model.Note;
 public class RestService {
 
   private final Service service;
-  private final Cache<UUID, Board> cache;
-  private final ExecutorService executor;
 
-  public RestService(final Service service, final Cache<UUID, Board> cache, final int threads) {
+  public RestService(final Service service) {
 
     this.service = service;
-    this.cache = cache;
-    this.executor = Executors.newFixedThreadPool(threads);
+
   }
 
   @GET
@@ -43,7 +35,7 @@ public class RestService {
     final UUID boardId) {
 
     return Response
-      .ok(cache.readThrough(boardId, f -> service.readBoard(boardId)))
+      .ok(service.readBoard(boardId))
       .build();
   }
 
@@ -58,10 +50,7 @@ public class RestService {
     final Column column,
     final Note note) {
 
-    escapeTags(note);
-
-    executor.execute(() -> service.createNote(boardId, column, note));
-    cacheAdd(boardId, column, note);
+    service.createNote(boardId, column, escapeTags(note));
 
     return Response.ok(note).build();
   }
@@ -77,10 +66,7 @@ public class RestService {
     final Column column,
     final Note note) {
 
-    escapeTags(note);
-
-    executor.execute(() -> service.updateNote(boardId, column, note));
-    cacheUpdate(boardId, column, note);
+    service.updateNote(boardId, column, escapeTags(note));
 
     return Response.accepted().build();
   }
@@ -97,53 +83,13 @@ public class RestService {
     @PathParam("noteId")
     final UUID noteId) {
 
-    executor.execute(() -> service.deleteNote(boardId, column, noteId));
-    cacheDelete(boardId, column, noteId);
+    service.deleteNote(boardId, column, noteId);
 
     return Response.ok(new Note().setId(noteId)).build();
   }
 
-  private void cacheAdd(final UUID boardId, final Column column, final Note note) {
-
-    Board board = cache.readThrough(boardId, f -> service.readBoard(boardId));
-    List<Note> notes = notes(board, column);
-    notes.add(note);
-  }
-
-  private void cacheUpdate(final UUID boardId, final Column column, final Note note) {
-
-    Board board = cache.readThrough(boardId, f -> service.readBoard(boardId));
-    List<Note> notes = notes(board, column);
-
-    int index = notes.indexOf(note);
-    notes.get(index).setText(note.getText());
-  }
-
-  private void cacheDelete(final UUID boardId, final Column column, final UUID noteId) {
-
-    Board board = cache.readThrough(boardId, f -> service.readBoard(boardId));
-    List<Note> notes = notes(board, column);
-    notes.remove(new Note().setId(noteId));
-  }
-
-  private List<Note> notes(final Board board, final Column column) {
-
-    List<Note> notes = null;
-    switch (column) {
-      case START:
-        notes = board.getStarts();
-        break;
-      case STOP:
-        notes = board.getStops();
-        break;
-      case CONTINUE:
-        notes = board.getContinues();
-        break;
-    }
-    return notes;
-  }
-
   private static Note escapeTags(final Note note) {
+
     return note.setText(note.getText().replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
   }
 }

@@ -11,9 +11,8 @@ import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Note;
 import org.adrianwalker.startstopcontinue.model.Column;
 
-public final class FileSystemDataAccess implements DataAccess {
+public abstract class FileSystemDataAccess implements DataAccess {
 
-  private static final int COLOR_FIELD_LENGTH = 7;
   private final Path path;
 
   public FileSystemDataAccess(final Path path) {
@@ -71,7 +70,7 @@ public final class FileSystemDataAccess implements DataAccess {
     return boardPath(boardId).resolve(column.name());
   }
 
-  private Path notePath(final UUID boardId, final Column column, UUID noteId) {
+  protected final Path notePath(final UUID boardId, final Column column, UUID noteId) {
 
     return columnPath(boardId, column)
       .resolve(noteId.toString());
@@ -95,18 +94,6 @@ public final class FileSystemDataAccess implements DataAccess {
     board.getContinues().forEach(note -> writeNote(board.getId(), Column.CONTINUE, note));
   }
 
-  private void writeNote(final UUID boardId, final Column column, final Note note) throws RuntimeException {
-
-    Path notePath = notePath(boardId, column, note.getId());
-    String content = note.getColor() + note.getText();
-
-    try {
-      Files.writeString(notePath, content);
-    } catch (final IOException ioe) {
-      throw new RuntimeException(ioe);
-    }
-  }
-
   private List<Note> readNotes(final Path columnPath) {
 
     Stream<Path> notePaths;
@@ -118,26 +105,11 @@ public final class FileSystemDataAccess implements DataAccess {
 
     return notePaths
       .map(notePath -> readNote(notePath))
+      .sorted((n1, n2) -> n1.getCreated().compareTo(n2.getCreated()))
       .collect(toList());
   }
 
-  private Note readNote(final Path notePath) {
+  protected abstract void writeNote(final UUID boardId, final Column column, final Note note);
 
-    String filename = notePath.getFileName().toString();
-    UUID id = UUID.fromString(filename);
-
-    try {
-      String content = Files.readString(notePath);
-      String color = content.substring(0, COLOR_FIELD_LENGTH);
-      String text = content.substring(COLOR_FIELD_LENGTH);
-
-      return new Note()
-        .setId(id)
-        .setColor(color)
-        .setText(text);
-
-    } catch (final IOException ioe) {
-      throw new RuntimeException(ioe);
-    }
-  }
+  protected abstract Note readNote(final Path notePath);
 }

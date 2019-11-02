@@ -113,6 +113,6 @@ ol li button {
   cursor: pointer;
 }
 ol li input[type="color"] {
-	border: none;
-	background: none;
+  border: none;
+  background: none;
 }

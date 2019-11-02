@@ -3,7 +3,7 @@ package org.adrianwalker.startstopcontinue;
 import java.nio.file.Path;
 import java.util.UUID;
 import org.adrianwalker.startstopcontinue.cache.Cache;
-import org.adrianwalker.startstopcontinue.dataaccess.FileSystemDataAccess;
+import org.adrianwalker.startstopcontinue.dataaccess.JsonFileSystemDataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.rest.RestServlet;
 import org.adrianwalker.startstopcontinue.service.Service;
@@ -21,7 +21,7 @@ public final class Launcher {
 
   private static final int BOARD_CACHE_SIZE = 32;
   private static final int PERSISTENCE_THREADS = 4;
-  private static final String FILE_PATH = "/var/tmp/startstopcontinue";
+  private static final Path FILE_PATH = Path.of("/var/tmp/startstopcontinue");
   private static final int PORT = 8080;
   private static final String CONTEXT_PATH = "/startstopcontinue";
   private static final String REST_SERVLET_PATH = "/api/*";
@@ -33,8 +33,9 @@ public final class Launcher {
 
   public static void main(final String[] args) throws Exception {
 
-    Service service = new Service(new FileSystemDataAccess(Path.of(FILE_PATH)), MAX_NOTE_LENGTH);
+    JsonFileSystemDataAccess dataAccess = new JsonFileSystemDataAccess(FILE_PATH);
     Cache<UUID, Board> cache = new Cache<>(BOARD_CACHE_SIZE);
+    Service service = new Service(dataAccess, cache, PERSISTENCE_THREADS, MAX_NOTE_LENGTH);
 
     Server server = createServer(PORT);
     ServletContextHandler context = createContext(CONTEXT_PATH, BASE_RESOURCE, WELCOME_FILES);
@@ -42,7 +43,7 @@ public final class Launcher {
     context.addServlet(
       new ServletHolder(
         new ServletContainer(
-          new RestServlet(service, cache, PERSISTENCE_THREADS))),
+          new RestServlet(service))),
       REST_SERVLET_PATH);
 
     context.addServlet(

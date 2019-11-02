@@ -9,9 +9,9 @@ public interface DataAccess {
 
   void createBoard(Board board);
 
-  void createNote(UUID boardId, Column column, Note note);
-
   Board readBoard(UUID boardId);
+
+  void createNote(UUID boardId, Column column, Note note);
 
   void updateNote(UUID boardId, Column column, Note note);
 

@@ -1,7 +1,6 @@
 package org.adrianwalker.startstopcontinue.model;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Objects;
 import java.util.List;
 import java.util.UUID;
@@ -12,13 +11,6 @@ public final class Board implements Serializable {
   private List<Note> starts;
   private List<Note> stops;
   private List<Note> continues;
-
-  public Board() {
-    id = UUID.randomUUID();
-    starts = new ArrayList<>();
-    stops = new ArrayList<>();
-    continues = new ArrayList<>();
-  }
 
   public UUID getId() {
     return id;

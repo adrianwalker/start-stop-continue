@@ -1,17 +1,17 @@
 package org.adrianwalker.startstopcontinue.rest;
 
-import java.util.UUID;
-import org.adrianwalker.startstopcontinue.cache.Cache;
-import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.service.Service;
 import org.glassfish.jersey.jackson.JacksonFeature;
+import org.glassfish.jersey.message.GZipEncoder;
 import org.glassfish.jersey.server.ResourceConfig;
+import org.glassfish.jersey.server.filter.EncodingFilter;
 
 public final class RestServlet extends ResourceConfig {
 
-  public RestServlet(final Service service, final Cache<UUID, Board> cache, final int threads) {
+  public RestServlet(final Service service) {
 
     register(JacksonFeature.class);
-    registerInstances(new RestService(service, cache, threads));
+    registerInstances(new RestService(service));
+    EncodingFilter.enableFor(this, GZipEncoder.class);
   }
 }

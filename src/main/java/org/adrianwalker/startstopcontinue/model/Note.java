@@ -1,18 +1,16 @@
 package org.adrianwalker.startstopcontinue.model;
 
 import java.io.Serializable;
+import java.util.Date;
 import java.util.Objects;
 import java.util.UUID;
 
 public final class Note implements Serializable {
 
   private UUID id;
+  private Date created;
   private String color;
   private String text;
-
-  public Note() {
-    id = UUID.randomUUID();
-  }
 
   public UUID getId() {
     return id;
@@ -20,6 +18,15 @@ public final class Note implements Serializable {
 
   public Note setId(final UUID id) {
     this.id = id;
+    return this;
+  }
+
+  public Date getCreated() {
+    return created;
+  }
+
+  public Note setCreated(final Date created) {
+    this.created = created;
     return this;
   }
 
@@ -67,5 +74,4 @@ public final class Note implements Serializable {
     Note other = (Note) obj;
     return Objects.equals(this.id, other.id);
   }
-
 }
