@@ -103,7 +103,8 @@ ul li:hover,ul li:focus {
 ol {
   text-align:center;
   position: fixed;
-  padding: 1em;
+  padding-top: 1em;
+  padding-bottom: 1em;
   top: 0;
   width: inherit;
   z-index: 1000;
