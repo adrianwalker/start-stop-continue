@@ -4,12 +4,12 @@ import java.nio.file.Path;
 
 public final class Configuration {
 
-  private static final String HTTP_PORT = "startstopcontinue.http.port";
-  private static final String CACHE_SIZE = "startstopcontinue.cache.size";
-  private static final String CACHE_SYNC = "startstopcontinue.cache.sync";
-  private static final String DATA_THREADS = "startstopcontinue.data.threads";
-  private static final String DATA_PATH = "startstopcontinue.data.path";
-  private static final String DATA_SIZE = "startstopcontinue.data.size";
+  private static final String HTTP_PORT = "STARTSTOPCONTINUE_HTTP_PORT";
+  private static final String CACHE_SIZE = "STARTSTOPCONTINUE_CACHE_SIZE";
+  private static final String CACHE_SYNC = "STARTSTOPCONTINUE_CACHE_SYNC";
+  private static final String DATA_THREADS = "STARTSTOPCONTINUE_DATA_THREADS";
+  private static final String DATA_PATH = "STARTSTOPCONTINUE_DATA_PATH";
+  private static final String DATA_SIZE = "STARTSTOPCONTINUE_DATA_SIZE";
 
   private static final String DEFAULT_HTTP_PORT = "8080";
   private static final String DEFAULT_CACHE_SIZE = "32";
