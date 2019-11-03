@@ -1,5 +1,6 @@
 package org.adrianwalker.startstopcontinue.rest;
 
+import static java.lang.String.format;
 import java.util.UUID;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -56,10 +57,10 @@ public class RestService {
     StreamingOutput stream = os -> {
       service.exportBoard(boardId, os);
     };
-
+    
     return Response
       .ok(stream)
-      .header(EXPORT_HEADER[0], EXPORT_HEADER[1].format(boardId.toString()))
+      .header(EXPORT_HEADER[0], format(EXPORT_HEADER[1], boardId.toString()))
       .build();
   }
 
