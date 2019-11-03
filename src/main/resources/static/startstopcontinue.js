@@ -53,13 +53,12 @@ $(document).ready(function () {
   }
 
   function scrollNote(noteId) {
-
-    var note = $("#" + noteId);
-    var header = note.parent().siblings();
-
-    $('html, body').animate({
-      scrollTop: note.offset().top - header.outerHeight()
-    }, 500);
+    
+    $("#" + noteId)[0].scrollIntoView({
+      behavior: "smooth", 
+      block: "end", 
+      inline: "nearest"
+    });
   }
 
   function addNote(boardId, column, note) {
