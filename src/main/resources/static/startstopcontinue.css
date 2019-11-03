@@ -9,6 +9,14 @@ body {
   background:#666;
   color:#fff;
 }
+a {
+  position: fixed;
+  bottom: 1em;
+  right: 1em;
+}
+a svg {
+  color: black;
+}
 div {
   margin-top: 3em;
   width: 33%;

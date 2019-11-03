@@ -57,7 +57,7 @@ public class RestService {
     StreamingOutput stream = os -> {
       service.exportBoard(boardId, os);
     };
-    
+
     return Response
       .ok(stream)
       .header(EXPORT_HEADER[0], format(EXPORT_HEADER[1], boardId.toString()))
