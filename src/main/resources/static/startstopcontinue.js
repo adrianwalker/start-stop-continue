@@ -53,10 +53,10 @@ $(document).ready(function () {
   }
 
   function scrollNote(noteId) {
-    
+
     $("#" + noteId)[0].scrollIntoView({
-      behavior: "smooth", 
-      block: "end", 
+      behavior: "smooth",
+      block: "end",
       inline: "nearest"
     });
   }
@@ -79,6 +79,13 @@ $(document).ready(function () {
 
         deleteNote(boardId, column, note.id).done(function (data) {
           $("#" + data.id).remove();
+        });
+
+      } else if (text === "export") {
+
+        deleteNote(boardId, column, note.id).done(function (data) {
+          $("#" + data.id).remove();
+          window.location = "api/board/" + boardId + "/export";
         });
 
       } else {

@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.adrianwalker</groupId>
   <artifactId>start-stop-continue</artifactId>
-  <version>0.0.3</version>
+  <version>0.0.4</version>
   <packaging>jar</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -76,6 +76,12 @@
       <groupId>org.apache.velocity</groupId>
       <artifactId>velocity-tools</artifactId>
       <version>2.0</version>
+    </dependency>
+    <!-- text utils -->
+    <dependency>
+      <groupId>org.apache.commons</groupId>
+      <artifactId>commons-text</artifactId>
+      <version>1.8</version>
     </dependency>
   </dependencies>
 </project>

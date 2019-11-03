@@ -1,5 +1,7 @@
 package org.adrianwalker.startstopcontinue.service;
 
+import java.io.IOException;
+import java.io.OutputStream;
 import static java.lang.Math.min;
 import java.util.ArrayList;
 import java.util.Date;
@@ -12,8 +14,11 @@ import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
+import org.apache.commons.lang.StringEscapeUtils;
 
 public final class Service {
+
+  private static final byte[] LINE_ENDING = {'\r', '\n'};
 
   private final DataAccess dataAccess;
   private final Cache<UUID, Board> cache;
@@ -121,5 +126,43 @@ public final class Service {
     }
 
     return text;
+  }
+
+  public final void exportBoard(final UUID boardId, final OutputStream os) {
+
+    Board board = cacheRead(boardId);
+    write(os, Column.START.name().getBytes());
+    exportNotes(board.getStarts(), os);
+    write(os, LINE_ENDING);
+    write(os, LINE_ENDING);
+
+    write(os, Column.STOP.name().getBytes());
+    exportNotes(board.getStops(), os);
+    write(os, LINE_ENDING);
+    write(os, LINE_ENDING);
+
+    write(os, Column.CONTINUE.name().getBytes());
+    exportNotes(board.getContinues(), os);
+  }
+
+  private void exportNotes(final List<Note> notes, final OutputStream os) {
+
+    notes.stream()
+      .map(note -> note.getText())
+      .map(text -> StringEscapeUtils.unescapeHtml(text))
+      .map(text -> text.getBytes())
+      .forEach(bytes -> {
+        write(os, LINE_ENDING);
+        write(os, LINE_ENDING);
+        write(os, bytes);
+      });
+  }
+
+  private void write(final OutputStream os, byte[] b) throws RuntimeException {
+    try {
+      os.write(b);
+    } catch (final IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
   }
 }

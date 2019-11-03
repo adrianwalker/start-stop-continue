@@ -11,13 +11,19 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import javax.ws.rs.core.StreamingOutput;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.ID;
 import org.adrianwalker.startstopcontinue.model.Note;
 import org.adrianwalker.startstopcontinue.service.Service;
+import org.apache.commons.lang.StringEscapeUtils;
 
 @Path("")
 public class RestService {
+
+  private static final String[] EXPORT_HEADER = {
+    "Content-Disposition", "attachment; filename=\"%s.txt\""
+  };
 
   private final Service service;
 
@@ -39,6 +45,24 @@ public class RestService {
       .build();
   }
 
+  @GET
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_OCTET_STREAM)
+  @Path("board/{boardId}/export")
+  public Response exportBoard(
+    @PathParam("boardId")
+    final UUID boardId) {
+
+    StreamingOutput stream = os -> {
+      service.exportBoard(boardId, os);
+    };
+
+    return Response
+      .ok(stream)
+      .header(EXPORT_HEADER[0], EXPORT_HEADER[1].format(boardId.toString()))
+      .build();
+  }
+
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
@@ -50,7 +74,7 @@ public class RestService {
     final Column column,
     final Note note) {
 
-    service.createNote(boardId, column, escapeTags(note));
+    service.createNote(boardId, column, escapeHtml(note));
 
     return Response.ok(new ID().setId(note.getId())).build();
   }
@@ -66,7 +90,7 @@ public class RestService {
     final Column column,
     final Note note) {
 
-    service.updateNote(boardId, column, escapeTags(note));
+    service.updateNote(boardId, column, escapeHtml(note));
 
     return Response.ok(new ID().setId(note.getId())).build();
   }
@@ -88,8 +112,7 @@ public class RestService {
     return Response.ok(new ID().setId(noteId)).build();
   }
 
-  private static Note escapeTags(final Note note) {
-
-    return note.setText(note.getText().replaceAll("<", "&lt;").replaceAll(">", "&gt;"));
+  private static Note escapeHtml(final Note note) {
+    return note.setText(StringEscapeUtils.escapeHtml(note.getText()));
   }
 }
