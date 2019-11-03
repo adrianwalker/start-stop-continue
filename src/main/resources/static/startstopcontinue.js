@@ -72,9 +72,9 @@ $(document).ready(function () {
   function loadNote(boardId, column, note) {
 
     COLUMNS[column].append(noteHtml(note.id, note.color, note.text));
-    COLUMNS[column].on('focusout', '#' + note.id, function () {
+    COLUMNS[column].on('change', '#' + note.id + ' > textarea', function () {
 
-      var text = $("#" + this.id + " textarea").val().trim();
+      var text = $("#" + note.id + " > textarea").val().trim();
       if (text === "") {
 
         deleteNote(boardId, column, note.id).done(function (data) {
