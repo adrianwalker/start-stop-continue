@@ -32,16 +32,12 @@ public final class Cache<T, R> {
 
     R value;
     if (cache.containsKey(key)) {
-      value = (R) cache.get(key);
+      value = cache.get(key);
     } else {
       value = f.apply(key);
       cache.put(key, value);
     }
 
     return value;
-  }
-
-  public void remove(final T key) {
-    cache.remove(key);
   }
 }
