@@ -8,7 +8,6 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
@@ -25,11 +24,11 @@ public final class Service {
   private final ExecutorService executor;
   private final int maxNoteLength;
 
-  public Service(final DataAccess dataAccess, final Cache<UUID, Board> cache, final int threads, final int maxNoteLength) {
+  public Service(final DataAccess dataAccess, final Cache<UUID, Board> cache, final ExecutorService executor, final int maxNoteLength) {
 
     this.dataAccess = dataAccess;
     this.cache = cache;
-    this.executor = Executors.newFixedThreadPool(threads);
+    this.executor = executor;
     this.maxNoteLength = maxNoteLength;
   }
 

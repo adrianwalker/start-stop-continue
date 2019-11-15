@@ -3,9 +3,7 @@ package org.adrianwalker.startstopcontinue.dataaccess;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.UUID;
 import org.adrianwalker.startstopcontinue.model.Note;
-import org.adrianwalker.startstopcontinue.model.Column;
 
 public final class JsonFileSystemDataAccess extends FileSystemDataAccess {
 
@@ -19,9 +17,7 @@ public final class JsonFileSystemDataAccess extends FileSystemDataAccess {
   }
 
   @Override
-  protected void writeNote(final UUID boardId, final Column column, final Note note) {
-
-    Path notePath = notePath(boardId, column, note.getId());
+  protected void writeNote(final Path notePath, final Note note) {
 
     try {
       objectMapper.writeValue(notePath.toFile(), note);

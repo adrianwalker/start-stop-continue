@@ -32,7 +32,7 @@ public abstract class FileSystemDataAccess implements DataAccess {
   @Override
   public void createNote(final UUID boardId, final Column column, final Note note) {
 
-    writeNote(boardId, column, note);
+    writeNote(notePath(boardId, column, note.getId()), note);
   }
 
   @Override
@@ -47,14 +47,14 @@ public abstract class FileSystemDataAccess implements DataAccess {
   @Override
   public void updateNote(final UUID boardId, final Column column, final Note note) {
 
-    writeNote(boardId, column, note);
+    writeNote(notePath(boardId, column, note.getId()), note);
   }
 
   @Override
   public void deleteNote(final UUID boardId, final Column column, final UUID noteId) {
 
     try {
-      Files.deleteIfExists(notePath(boardId, column, noteId));
+      Files.delete(notePath(boardId, column, noteId));
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }
@@ -89,9 +89,9 @@ public abstract class FileSystemDataAccess implements DataAccess {
       throw new RuntimeException(ioe);
     }
 
-    board.getStarts().forEach(note -> writeNote(board.getId(), Column.START, note));
-    board.getStops().forEach(note -> writeNote(board.getId(), Column.STOP, note));
-    board.getContinues().forEach(note -> writeNote(board.getId(), Column.CONTINUE, note));
+    board.getStarts().forEach(note -> writeNote(notePath(board.getId(), Column.START, note.getId()), note));
+    board.getContinues().forEach(note -> writeNote(notePath(board.getId(), Column.CONTINUE, note.getId()), note));
+    board.getStops().forEach(note -> writeNote(notePath(board.getId(), Column.STOP, note.getId()), note));
   }
 
   private List<Note> readNotes(final Path columnPath) {
@@ -109,7 +109,7 @@ public abstract class FileSystemDataAccess implements DataAccess {
       .collect(toList());
   }
 
-  protected abstract void writeNote(final UUID boardId, final Column column, final Note note);
+  protected abstract void writeNote(final Path notePath, final Note note);
 
   protected abstract Note readNote(final Path notePath);
 }
