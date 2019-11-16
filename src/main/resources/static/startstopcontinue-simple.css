@@ -28,7 +28,7 @@ ul li {
   text-decoration:none;
   color:#000;
   height: 8em;
-  padding: 1em;
+  padding: 0.5em;
 }
 ul li textarea {
   font-family: arial,sans-serif;
