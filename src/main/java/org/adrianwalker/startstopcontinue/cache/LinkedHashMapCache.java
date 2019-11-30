@@ -1,5 +1,6 @@
 package org.adrianwalker.startstopcontinue.cache;
 
+import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -18,6 +19,7 @@ public final class LinkedHashMapCache implements Cache {
   private static final float LOAD_FACTOR = 0.75f;
   private static final boolean ACCESS_ORDER = true;
   private static final Collector<Note, ?, Map<UUID, Note>> NOTE_COLLECTOR = Collectors.toMap(Note::getId, note -> note);
+  private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
 
   private final Map<UUID, Map<Column, Map<UUID, Note>>> cache;
 
@@ -72,16 +74,15 @@ public final class LinkedHashMapCache implements Cache {
 
   private Board fromCache(final UUID boardId) {
 
+    Map<Column, Map<UUID, Note>> columns = cache.get(boardId);
+
     return new Board().setId(boardId)
-      .setStarts(cache.get(boardId).get(Column.START).values().stream()
-        .sorted((n1, n2) -> n1.getCreated().compareTo(n2.getCreated()))
-        .collect(toList()))
-      .setStops(cache.get(boardId).get(Column.STOP).values().stream()
-        .sorted((n1, n2) -> n1.getCreated().compareTo(n2.getCreated()))
-        .collect(toList()))
-      .setContinues(cache.get(boardId).get(Column.CONTINUE).values().stream()
-        .sorted((n1, n2) -> n1.getCreated().compareTo(n2.getCreated()))
-        .collect(toList()));
+      .setStarts(columns.get(Column.START).values().stream()
+        .sorted(NOTE_COMPARATOR).collect(toList()))
+      .setStops(columns.get(Column.STOP).values().stream()
+        .sorted(NOTE_COMPARATOR).collect(toList()))
+      .setContinues(columns.get(Column.CONTINUE).values().stream()
+        .sorted(NOTE_COMPARATOR).collect(toList()));
   }
 
   private void toCache(final UUID boardId, final Board board) {
