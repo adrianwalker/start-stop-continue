@@ -10,6 +10,7 @@ import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Function;
 import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
@@ -63,9 +64,28 @@ public final class ServiceTest {
       .setContinues(continues));
   }
 
-  public static Cache<UUID, Board> nonCachingCache() {
+  public static Cache nonCachingCache() {
 
-    return (key, f) -> f.apply(key);
+    return new Cache() {
+      
+      @Override
+      public Board readThrough(UUID boardId, Function<UUID, Board> f) {
+        return f.apply(boardId);
+      }
+
+      @Override
+      public Note read(UUID boardId, Column column, UUID noteId) {
+        return new Note().setId(noteId);
+      }
+
+      @Override
+      public void write(UUID boardId, Column column, Note note) {
+      }
+
+      @Override
+      public void delete(UUID boardId, Column column, UUID noteId) {
+      }
+    };
   }
 
   @Test

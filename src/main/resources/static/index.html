@@ -9,13 +9,13 @@
     <link rel="stylesheet" media="screen and (min-device-width: 800px)" href="startstopcontinue-min.css" />
     <link rel="stylesheet" media="screen and (max-device-width: 800px)" href="startstopcontinue-simple-min.css" />
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
-    <script src="startstopcontinue.js"></script>
+    <script src="startstopcontinue-min.js"></script>
     <script type="text/javascript">
       var boardId = "$boardid";
     </script>
   </head>
   <body>
-    <div>
+    <div id="start">
       <ol>
         <li>
           <span><input id="start-color" type="color" value="#ccffcc" /></span>
@@ -25,7 +25,7 @@
       <ul id="start-list">
       </ul>
     </div>
-    <div>
+    <div id="stop">
       <ol>
         <li>
           <span><input id="stop-color" type="color" value="#ffcccc" /></span>
@@ -35,7 +35,7 @@
       <ul id="stop-list">
       </ul>
     </div>
-    <div>
+    <div id="continue">
       <ol>
         <li>
           <span><input id="continue-color" type="color" value="#ffffcc" /></span>

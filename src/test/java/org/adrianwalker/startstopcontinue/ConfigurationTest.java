@@ -27,12 +27,6 @@ public final class ConfigurationTest {
   }
 
   @Test
-  public void testGetCacheSync() {
-
-    assertEquals(false, configuration.getCacheSync());
-  }
-
-  @Test
   public void testGetDataThreads() {
 
     assertEquals(8, configuration.getDataThreads());

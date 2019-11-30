@@ -1,12 +1,10 @@
 package org.adrianwalker.startstopcontinue;
 
-import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.cache.LinkedHashMapCache;
 import org.adrianwalker.startstopcontinue.dataaccess.JsonFileSystemDataAccess;
-import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.rest.RestServlet;
 import org.adrianwalker.startstopcontinue.service.Service;
 import org.adrianwalker.startstopcontinue.web.WebServlet;
@@ -33,7 +31,7 @@ public final class Launcher {
     Configuration config = new Configuration();
 
     JsonFileSystemDataAccess dataAccess = new JsonFileSystemDataAccess(config.getDataPath());
-    Cache<UUID, Board> cache = new LinkedHashMapCache<>(config.getCacheSize(), config.getCacheSync());
+    Cache cache = new LinkedHashMapCache(config.getCacheSize());
     ExecutorService executorService = Executors.newFixedThreadPool(config.getDataThreads());
     Service service = new Service(dataAccess, cache, executorService, config.getDataSize());
 

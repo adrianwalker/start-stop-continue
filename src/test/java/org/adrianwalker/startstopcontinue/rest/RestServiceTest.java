@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.StreamingOutput;
 import org.adrianwalker.startstopcontinue.cache.Cache;
@@ -64,9 +65,28 @@ public final class RestServiceTest {
     service = new Service(dataAccess, nonCachingCache(), executorService, 0);
   }
 
-  public static Cache<UUID, Board> nonCachingCache() {
+  public static Cache nonCachingCache() {
 
-    return (key, f) -> f.apply(key);
+    return new Cache() {
+
+      @Override
+      public Board readThrough(UUID boardId, Function<UUID, Board> f) {
+        return f.apply(boardId);
+      }
+
+      @Override
+      public Note read(UUID boardId, Column column, UUID noteId) {
+        return new Note().setId(noteId);
+      }
+
+      @Override
+      public void write(UUID boardId, Column column, Note note) {
+      }
+
+      @Override
+      public void delete(UUID boardId, Column column, UUID noteId) {
+      }
+    };
   }
 
   @Test
