@@ -9,7 +9,7 @@ import org.adrianwalker.startstopcontinue.model.Note;
 public interface Cache {
 
   Board readThrough(final UUID boardId, final Function<UUID, Board> f);
-  
+
   Note read(final UUID boardId, final Column column, final UUID noteId);
 
   void write(final UUID boardId, final Column column, final Note note);

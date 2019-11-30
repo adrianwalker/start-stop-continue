@@ -67,7 +67,7 @@ public final class ServiceTest {
   public static Cache nonCachingCache() {
 
     return new Cache() {
-      
+
       @Override
       public Board readThrough(UUID boardId, Function<UUID, Board> f) {
         return f.apply(boardId);
