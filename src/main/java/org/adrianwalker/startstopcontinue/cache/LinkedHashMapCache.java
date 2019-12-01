@@ -8,8 +8,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collector;
-import java.util.stream.Collectors;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
@@ -18,7 +18,7 @@ public final class LinkedHashMapCache implements Cache {
 
   private static final float LOAD_FACTOR = 0.75f;
   private static final boolean ACCESS_ORDER = true;
-  private static final Collector<Note, ?, Map<UUID, Note>> NOTE_COLLECTOR = Collectors.toMap(Note::getId, note -> note);
+  private static final Collector<Note, ?, Map<UUID, Note>> NOTE_COLLECTOR = toMap(Note::getId, note -> note);
   private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
 
   private final Map<UUID, Map<Column, Map<UUID, Note>>> cache;

@@ -3,7 +3,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.adrianwalker</groupId>
   <artifactId>start-stop-continue</artifactId>
-  <version>0.0.4</version>
+  <version>0.0.5</version>
   <packaging>jar</packaging>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -119,6 +119,12 @@
       <groupId>org.apache.commons</groupId>
       <artifactId>commons-text</artifactId>
       <version>1.8</version>
+    </dependency>
+    <!-- caching -->
+    <dependency>
+      <groupId>io.lettuce</groupId>
+      <artifactId>lettuce-core</artifactId>
+      <version>5.2.1.RELEASE</version>
     </dependency>
     <!-- unit tests -->
     <dependency>

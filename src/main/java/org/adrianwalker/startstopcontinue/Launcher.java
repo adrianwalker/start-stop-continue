@@ -4,6 +4,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.cache.LinkedHashMapCache;
+import org.adrianwalker.startstopcontinue.cache.RedisCache;
 import org.adrianwalker.startstopcontinue.dataaccess.JsonFileSystemDataAccess;
 import org.adrianwalker.startstopcontinue.rest.RestServlet;
 import org.adrianwalker.startstopcontinue.service.Service;
@@ -31,7 +32,7 @@ public final class Launcher {
     Configuration config = new Configuration();
 
     JsonFileSystemDataAccess dataAccess = new JsonFileSystemDataAccess(config.getDataPath());
-    Cache cache = new LinkedHashMapCache(config.getCacheSize());
+    Cache cache = CacheFactory.create(config);
     ExecutorService executorService = Executors.newFixedThreadPool(config.getDataThreads());
     Service service = new Service(dataAccess, cache, executorService, config.getDataSize());
 
@@ -74,5 +75,24 @@ public final class Launcher {
     server.setConnectors(new Connector[]{connector});
 
     return server;
+  }
+
+  private static final class CacheFactory {
+
+    public static Cache create(final Configuration config) {
+
+      Cache cache;
+
+      if (!config.getCacheHostname().isEmpty() && config.getCachePort() > 0) {
+        
+        cache = new RedisCache(config.getCacheHostname(), config.getCachePort());
+      
+      } else {
+        
+        cache = new LinkedHashMapCache(config.getCacheSize());
+      }
+
+      return cache;
+    }
   }
 }

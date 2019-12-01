@@ -21,6 +21,18 @@ public final class ConfigurationTest {
   }
 
   @Test
+  public void testGetCacheHostname() {
+
+    assertEquals("", configuration.getCacheHostname());
+  }
+
+  @Test
+  public void testGetCachePort() {
+
+    assertEquals(0, configuration.getCachePort());
+  }
+
+  @Test
   public void testGetCacheSize() {
 
     assertEquals(32, configuration.getCacheSize());
