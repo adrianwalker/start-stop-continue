@@ -5,7 +5,9 @@ import java.util.concurrent.Executors;
 import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.cache.LinkedHashMapCache;
 import org.adrianwalker.startstopcontinue.cache.RedisCache;
+import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.dataaccess.JsonFileSystemDataAccess;
+import org.adrianwalker.startstopcontinue.dataaccess.MinioDataAccess;
 import org.adrianwalker.startstopcontinue.rest.RestServlet;
 import org.adrianwalker.startstopcontinue.service.Service;
 import org.adrianwalker.startstopcontinue.web.WebServlet;
@@ -31,7 +33,7 @@ public final class Launcher {
 
     Configuration config = new Configuration();
 
-    JsonFileSystemDataAccess dataAccess = new JsonFileSystemDataAccess(config.getDataPath());
+    DataAccess dataAccess = DataAccessFactory.create(config);
     Cache cache = CacheFactory.create(config);
     ExecutorService executorService = Executors.newFixedThreadPool(config.getDataThreads());
     Service service = new Service(dataAccess, cache, executorService, config.getDataSize());
@@ -84,15 +86,38 @@ public final class Launcher {
       Cache cache;
 
       if (!config.getCacheHostname().isEmpty() && config.getCachePort() > 0) {
-        
-        cache = new RedisCache(config.getCacheHostname(), config.getCachePort());
-      
+
+        cache = new RedisCache(
+          config.getCacheHostname(), config.getCachePort(),
+          config.getCachePassword());
+
       } else {
-        
+
         cache = new LinkedHashMapCache(config.getCacheSize());
       }
 
       return cache;
+    }
+  }
+
+  private static final class DataAccessFactory {
+
+    public static DataAccess create(final Configuration config) {
+
+      DataAccess dataAccess;
+
+      if (!config.getDataEndpoint().isEmpty() && config.getDataPort() > 0) {
+
+        dataAccess = new MinioDataAccess(
+          config.getDataEndpoint(), config.getDataPort(),
+          config.getDataAccessKey(), config.getDataSecretKey());
+
+      } else {
+
+        dataAccess = new JsonFileSystemDataAccess(config.getDataPath());
+      }
+
+      return dataAccess;
     }
   }
 }

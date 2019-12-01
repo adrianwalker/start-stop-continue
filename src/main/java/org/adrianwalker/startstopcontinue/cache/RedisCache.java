@@ -21,7 +21,7 @@ import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 
-public final class RedisCache implements Cache, AutoCloseable {
+public final class RedisCache implements Cache {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String FIELD_SEPERATOR = "/";
@@ -34,18 +34,15 @@ public final class RedisCache implements Cache, AutoCloseable {
   private final RedisClient redisClient;
   private final StatefulRedisConnection<String, String> redisConnection;
 
-  public RedisCache(final String hostname, final int port) {
+  public RedisCache(final String hostname, final int port, final String password) {
 
-    RedisURI redisURI = RedisURI.Builder.redis(hostname).withPort(port).build();
+    RedisURI redisURI = RedisURI.Builder
+      .redis(hostname)
+      .withPort(port)
+      .withPassword(password)
+      .build();
     redisClient = RedisClient.create(redisURI);
     redisConnection = redisClient.connect();
-  }
-
-  @Override
-  public void close() throws Exception {
-
-    redisConnection.close();
-    redisClient.shutdown();
   }
 
   @Override
@@ -85,15 +82,15 @@ public final class RedisCache implements Cache, AutoCloseable {
   }
 
   private static String fieldHead(final String noteField) {
-    
+
     return noteField.substring(0, noteField.indexOf(FIELD_SEPERATOR));
   }
-  
+
   private static String noteField(final Column column, final UUID noteId) {
 
     return column.name() + FIELD_SEPERATOR + noteId.toString();
   }
-  
+
   private static List<Note> combineNotes(final List<Note>... noteLists) {
 
     List<Note> combined = new ArrayList<>();
@@ -112,7 +109,7 @@ public final class RedisCache implements Cache, AutoCloseable {
       throw new RuntimeException(ioe);
     }
   }
-  
+
   private boolean exists(final String... keys) {
 
     return redisConnection.sync().exists(keys) > 0;

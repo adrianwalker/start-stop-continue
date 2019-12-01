@@ -126,6 +126,12 @@
       <artifactId>lettuce-core</artifactId>
       <version>5.2.1.RELEASE</version>
     </dependency>
+    <!-- object storage -->
+    <dependency>
+      <groupId>io.minio</groupId>
+      <artifactId>minio</artifactId>
+      <version>6.0.11</version>
+    </dependency>
     <!-- unit tests -->
     <dependency>
       <groupId>junit</groupId>

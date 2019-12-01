@@ -3,6 +3,7 @@ package org.adrianwalker.startstopcontinue.dataaccess;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 import static java.util.stream.Collectors.toList;
@@ -13,14 +14,12 @@ import org.adrianwalker.startstopcontinue.model.Column;
 
 public abstract class FileSystemDataAccess implements DataAccess {
 
+  private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
+  
   private final Path path;
 
   public FileSystemDataAccess(final Path path) {
     this.path = path;
-  }
-
-  public Path getPath() {
-    return path;
   }
 
   @Override
@@ -62,7 +61,7 @@ public abstract class FileSystemDataAccess implements DataAccess {
 
   private Path boardPath(final UUID boardId) {
 
-    return getPath().resolve(boardId.toString());
+    return path.resolve(boardId.toString());
   }
 
   private Path columnPath(final UUID boardId, final Column column) {
@@ -105,7 +104,7 @@ public abstract class FileSystemDataAccess implements DataAccess {
 
     return notePaths
       .map(notePath -> readNote(notePath))
-      .sorted((n1, n2) -> n1.getCreated().compareTo(n2.getCreated()))
+      .sorted(NOTE_COMPARATOR)
       .collect(toList());
   }
 
