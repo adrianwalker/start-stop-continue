@@ -89,6 +89,11 @@ public final class LinkedHashMapCacheTest {
     Note note3 = new Note().setId(id3);
 
     Cache cache = new LinkedHashMapCache(10);
+    cache.readThrough(id4, f -> new Board().setId(id4)
+      .setStarts(new ArrayList<>())
+      .setStops(new ArrayList<>())
+      .setContinues(new ArrayList<>()));
+    
     cache.write(id4, Column.START, note1);
     cache.write(id4, Column.STOP, note2);
     cache.write(id4, Column.CONTINUE, note3);

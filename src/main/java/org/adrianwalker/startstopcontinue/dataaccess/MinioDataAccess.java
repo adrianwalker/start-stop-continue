@@ -102,8 +102,7 @@ public final class MinioDataAccess implements DataAccess {
 
   private List<Note> readNotes(final String columnName) {
 
-    Stream<Result<Item>> results;
-    results = StreamSupport
+    Stream<Result<Item>> results = StreamSupport
       .stream(minioClient
         .listObjects(BUCKET_NAME, columnName, true)
         .spliterator(), true);

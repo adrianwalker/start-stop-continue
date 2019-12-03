@@ -72,7 +72,7 @@ public final class RedisCache implements Cache {
   @Override
   public void write(final UUID boardId, final Column column, final Note note) {
 
-    hmset(boardId.toString(), Map.of(noteField(column, note.getId()), writeNote(note)));
+    hset(boardId.toString(), noteField(column, note.getId()), writeNote(note));
   }
 
   @Override
@@ -123,6 +123,11 @@ public final class RedisCache implements Cache {
   private String hget(final String key, final String field) {
 
     return redisConnection.sync().hget(key, field);
+  }
+
+  private void hset(final String key, final String field, final String value) {
+
+    redisConnection.sync().hset(key, field, value);
   }
 
   private void hmset(final String key, final Map<String, String> hash) {

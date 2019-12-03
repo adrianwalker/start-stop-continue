@@ -61,9 +61,7 @@ public final class LinkedHashMapCache implements Cache {
   @Override
   public void write(final UUID boardId, final Column column, final Note note) {
 
-    cache.computeIfAbsent(boardId, b -> new EnumMap<>(Column.class))
-      .computeIfAbsent(column, c -> new HashMap<>())
-      .put(note.getId(), note);
+    cache.get(boardId).get(column).put(note.getId(), note);
   }
 
   @Override
