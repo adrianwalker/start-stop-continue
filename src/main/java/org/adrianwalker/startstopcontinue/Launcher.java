@@ -14,6 +14,8 @@ import org.adrianwalker.startstopcontinue.service.Service;
 import org.adrianwalker.startstopcontinue.web.WebServlet;
 import org.adrianwalker.startstopcontinue.websocket.EventSocket;
 import org.adrianwalker.startstopcontinue.websocket.EventSocketConfigurator;
+import org.adrianwalker.startstopcontinue.websocket.HashMapSessionCache;
+import org.adrianwalker.startstopcontinue.websocket.SessionCache;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -41,6 +43,7 @@ public final class Launcher {
 
     DataAccess dataAccess = DataAccessFactory.create(config);
     Cache cache = CacheFactory.create(config);
+    SessionCache sessionCache = new HashMapSessionCache();
     ExecutorService executorService = Executors.newFixedThreadPool(config.getDataThreads());
     Service service = new Service(dataAccess, cache, executorService, config.getDataSize());
 
@@ -61,7 +64,7 @@ public final class Launcher {
       .configureContext(context)
       .addEndpoint(ServerEndpointConfig.Builder
         .create(EventSocket.class, WEB_SOCKET_SERVLET_PATH)
-        .configurator(new EventSocketConfigurator())
+        .configurator(new EventSocketConfigurator(sessionCache))
         .build());
 
     context.addServlet(DefaultServlet.class, DEFAULT_SERVLET_PATH);

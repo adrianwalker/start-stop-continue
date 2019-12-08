@@ -1,11 +1,6 @@
 package org.adrianwalker.startstopcontinue.websocket;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
 import javax.websocket.OnMessage;
@@ -16,21 +11,17 @@ import javax.websocket.server.ServerEndpoint;
 @ServerEndpoint("")
 public final class EventSocket {
 
-  private static final String BOARD_ID = "boardId";
-  private static final Map<UUID, Set<Session>> BOARD_ID_SESSIONS = new HashMap<>();
-
-  public EventSocket() {
+  private final SessionCache sessionCache;
+  
+  public EventSocket(final SessionCache sessionCache) {
+    
+    this.sessionCache = sessionCache;
   }
 
   @OnOpen
   public void onOpen(final Session session) {
 
-    addSession(session, getBoardId(session));
-  }
-
-  private static UUID getBoardId(final Session session) {
-    
-    return UUID.fromString(session.getPathParameters().get(BOARD_ID));
+    sessionCache.add(session);
   }
 
   @OnMessage
@@ -42,7 +33,7 @@ public final class EventSocket {
   @OnClose
   public void onClose(final Session session) {
 
-    removeSession(session);
+    sessionCache.remove(session);
   }
 
   @OnError
@@ -51,26 +42,9 @@ public final class EventSocket {
     throw new RuntimeException(cause);
   }
 
-  private void addSession(final Session session, final UUID boardId) {
-
-    BOARD_ID_SESSIONS.computeIfAbsent(boardId, m -> new HashSet<>()).add(session);
-  }
-
-  private void removeSession(final Session session) {
-
-    UUID boardId = getBoardId(session);
-    Set<Session> sessions = BOARD_ID_SESSIONS.get(boardId);
-
-    sessions.remove(session);
-
-    if (sessions.isEmpty()) {
-      BOARD_ID_SESSIONS.remove(boardId);
-    }
-  }
-
   private void broadcast(final Session senderSession, final String json) {
 
-    BOARD_ID_SESSIONS.get(getBoardId(senderSession)).stream()
+    sessionCache.get(senderSession).stream()
       .filter(session -> session.isOpen())
       .filter(openSession -> !openSession.equals(senderSession))
       .forEach(peerSession -> {
