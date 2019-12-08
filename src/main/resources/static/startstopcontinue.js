@@ -8,6 +8,7 @@ $(document).ready(function () {
     "CONTINUE": $("#continue-list")
   };
 
+  var webSocket = openWebSocket(boardId);
   loadBoard(boardId);
 
   $("#add-start").click(function () {
@@ -79,6 +80,7 @@ $(document).ready(function () {
 
         deleteNote(boardId, column, note.id).done(function (data) {
           $("#" + data.id).remove();
+          sendEvent(boardId, column, {id: note.id, color: note.color, text: text});
         });
 
       } else if (text === "export") {
@@ -89,7 +91,10 @@ $(document).ready(function () {
         });
 
       } else {
-        updateNote(boardId, column, {id: note.id, text: text});
+
+        updateNote(boardId, column, {id: note.id, text: text}).done(function (data) {
+          sendEvent(boardId, column, {id: note.id, color: note.color, text: text});
+        });
       }
     });
   }
@@ -121,5 +126,45 @@ $(document).ready(function () {
       type: 'DELETE',
       contentType: 'application/json'
     });
+  }
+
+  function openWebSocket(boardId) {
+
+    var url = "ws://" + window.location.host + window.location.pathname + "events/" + boardId;
+    var webSocket = new WebSocket(url);
+    webSocket.onmessage = function (event) {
+      var data = JSON.parse(event.data);
+      handleEvent(data.boardId, data.column, data.note);
+    };
+
+    return webSocket;
+  }
+
+  function isWebSocketOpen(webSocket) {
+    return webSocket.readyState === webSocket.OPEN;
+  }
+
+  function sendEvent(boardId, column, note) {
+
+    if (!isWebSocketOpen(webSocket)) {
+      webSocket = openWebSocket(boardId);
+    }
+
+    webSocket.send(JSON.stringify({boardId: boardId, column: column, note: note}));
+  }
+
+  function handleEvent(boardId, column, note) {
+
+    if (note.id && $("#" + note.id).length) {
+
+      if (note.text) {
+        $("#" + note.id + " > textarea").val(note.text);
+      } else {
+        $("#" + note.id).remove();
+      }
+
+    } else if (note.id && note.text) {
+      loadNote(boardId, column, note);
+    }
   }
 });

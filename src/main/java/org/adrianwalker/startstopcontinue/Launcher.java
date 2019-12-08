@@ -2,6 +2,7 @@ package org.adrianwalker.startstopcontinue;
 
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import javax.websocket.server.ServerEndpointConfig;
 import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.cache.LinkedHashMapCache;
 import org.adrianwalker.startstopcontinue.cache.RedisCache;
@@ -11,6 +12,8 @@ import org.adrianwalker.startstopcontinue.dataaccess.MinioDataAccess;
 import org.adrianwalker.startstopcontinue.rest.RestServlet;
 import org.adrianwalker.startstopcontinue.service.Service;
 import org.adrianwalker.startstopcontinue.web.WebServlet;
+import org.adrianwalker.startstopcontinue.websocket.EventSocket;
+import org.adrianwalker.startstopcontinue.websocket.EventSocketConfigurator;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -18,6 +21,7 @@ import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.glassfish.jersey.servlet.ServletContainer;
 
 public final class Launcher {
@@ -26,8 +30,10 @@ public final class Launcher {
   private static final String REST_SERVLET_PATH = "/api/*";
   private static final String WEB_SERVLET_PATH = "/index.html";
   private static final String DEFAULT_SERVLET_PATH = "/";
+  private static final String WEB_SOCKET_SERVLET_PATH = "/events/{boardId}";
   private static final String[] WELCOME_FILES = {"index.html"};
   private static final String BASE_RESOURCE = "static/";
+  private static final int IDLE_TIMEOUT = 30 * 60 * 1000;
 
   public static void main(final String[] args) throws Exception {
 
@@ -50,6 +56,13 @@ public final class Launcher {
     context.addServlet(
       new ServletHolder(new WebServlet(service)),
       WEB_SERVLET_PATH);
+
+    WebSocketServerContainerInitializer
+      .configureContext(context)
+      .addEndpoint(ServerEndpointConfig.Builder
+        .create(EventSocket.class, WEB_SOCKET_SERVLET_PATH)
+        .configurator(new EventSocketConfigurator())
+        .build());
 
     context.addServlet(DefaultServlet.class, DEFAULT_SERVLET_PATH);
 
@@ -74,6 +87,7 @@ public final class Launcher {
     Server server = new Server();
     ServerConnector connector = new ServerConnector(server);
     connector.setPort(port);
+    connector.setIdleTimeout(IDLE_TIMEOUT);
     server.setConnectors(new Connector[]{connector});
 
     return server;
