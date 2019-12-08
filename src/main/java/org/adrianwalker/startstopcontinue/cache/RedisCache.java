@@ -2,8 +2,6 @@ package org.adrianwalker.startstopcontinue.cache;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -31,18 +29,11 @@ public final class RedisCache implements Cache {
     entry -> List.of(readNote(entry.getValue())),
     (n1, n2) -> combineNotes(n1, n2));
 
-  private final RedisClient redisClient;
   private final StatefulRedisConnection<String, String> redisConnection;
 
-  public RedisCache(final String hostname, final int port, final String password) {
+  public RedisCache(final StatefulRedisConnection<String, String> redisConnection) {
 
-    RedisURI redisURI = RedisURI.Builder
-      .redis(hostname)
-      .withPort(port)
-      .withPassword(password)
-      .build();
-    redisClient = RedisClient.create(redisURI);
-    redisConnection = redisClient.connect();
+    this.redisConnection = redisConnection;
   }
 
   @Override

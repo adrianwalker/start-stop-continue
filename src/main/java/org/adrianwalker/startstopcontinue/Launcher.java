@@ -1,5 +1,9 @@
 package org.adrianwalker.startstopcontinue;
 
+import io.lettuce.core.RedisClient;
+import io.lettuce.core.RedisURI;
+import io.lettuce.core.api.StatefulRedisConnection;
+import io.minio.MinioClient;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.websocket.server.ServerEndpointConfig;
@@ -104,9 +108,7 @@ public final class Launcher {
 
       if (!config.getCacheHostname().isEmpty() && config.getCachePort() > 0) {
 
-        cache = new RedisCache(
-          config.getCacheHostname(), config.getCachePort(),
-          config.getCachePassword());
+        cache = new RedisCache(createRedisconnection(config));
 
       } else {
 
@@ -114,6 +116,16 @@ public final class Launcher {
       }
 
       return cache;
+    }
+
+    private static StatefulRedisConnection createRedisconnection(final Configuration config) {
+
+      return RedisClient.create(RedisURI.Builder
+        .redis(config.getCacheHostname())
+        .withPort(config.getCachePort())
+        .withPassword(config.getCachePassword())
+        .build())
+        .connect();
     }
   }
 
@@ -125,9 +137,7 @@ public final class Launcher {
 
       if (!config.getDataEndpoint().isEmpty() && config.getDataPort() > 0) {
 
-        dataAccess = new MinioDataAccess(
-          config.getDataEndpoint(), config.getDataPort(),
-          config.getDataAccessKey(), config.getDataSecretKey());
+        dataAccess = new MinioDataAccess(createMinioClient(config));
 
       } else {
 
@@ -135,6 +145,21 @@ public final class Launcher {
       }
 
       return dataAccess;
+    }
+
+    private static MinioClient createMinioClient(final Configuration config) throws RuntimeException {
+
+      MinioClient minioClient;
+      try {
+        minioClient = new MinioClient(
+          config.getDataEndpoint(), config.getDataPort(),
+          config.getDataAccessKey(), config.getDataSecretKey());
+
+      } catch (final Exception e) {
+        throw new RuntimeException(e);
+      }
+      
+      return minioClient;
     }
   }
 }

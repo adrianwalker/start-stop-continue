@@ -27,10 +27,11 @@ public final class MinioDataAccess implements DataAccess {
 
   private final MinioClient minioClient;
 
-  public MinioDataAccess(final String endpoint, final int port, final String accessKey, final String secretKey) {
+  public MinioDataAccess(final MinioClient minioClient) {
+
+    this.minioClient = minioClient;
 
     try {
-      minioClient = new MinioClient(endpoint, port, accessKey, secretKey);
       boolean bucketExists = minioClient.bucketExists(BUCKET_NAME);
 
       if (!bucketExists) {
