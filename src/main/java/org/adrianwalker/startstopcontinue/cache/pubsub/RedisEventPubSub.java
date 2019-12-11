@@ -47,9 +47,9 @@ public final class RedisEventPubSub implements EventPubSub {
 
   @Override
   public void addConsumer(final BiConsumer<UUID, Event> consumer) {
-    
+
     subscribeConnection.addListener(new RedisPubSubAdapter<>() {
-      
+
       @Override
       public void message(final String channel, final String message) {
 

@@ -15,7 +15,7 @@ import org.adrianwalker.startstopcontinue.model.Column;
 public abstract class FileSystemDataAccess implements DataAccess {
 
   private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
-  
+
   private final Path path;
 
   public FileSystemDataAccess(final Path path) {

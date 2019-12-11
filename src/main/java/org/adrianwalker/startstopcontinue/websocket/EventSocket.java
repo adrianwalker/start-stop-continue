@@ -7,7 +7,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
-import java.util.concurrent.TimeoutException;
 import java.util.function.BiConsumer;
 import javax.websocket.OnClose;
 import javax.websocket.OnError;
