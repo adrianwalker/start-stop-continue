@@ -3,6 +3,7 @@ package org.adrianwalker.startstopcontinue;
 import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
+import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import io.minio.MinioClient;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,10 +17,11 @@ import org.adrianwalker.startstopcontinue.dataaccess.MinioDataAccess;
 import org.adrianwalker.startstopcontinue.rest.RestServlet;
 import org.adrianwalker.startstopcontinue.service.Service;
 import org.adrianwalker.startstopcontinue.web.WebServlet;
+import org.adrianwalker.startstopcontinue.cache.pubsub.EventPubSub;
+import org.adrianwalker.startstopcontinue.cache.pubsub.ArrayListEventPubSub;
 import org.adrianwalker.startstopcontinue.websocket.EventSocket;
 import org.adrianwalker.startstopcontinue.websocket.EventSocketConfigurator;
-import org.adrianwalker.startstopcontinue.websocket.HashMapSessionCache;
-import org.adrianwalker.startstopcontinue.websocket.SessionCache;
+import org.adrianwalker.startstopcontinue.cache.pubsub.RedisEventPubSub;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -27,6 +29,7 @@ import org.eclipse.jetty.servlet.DefaultServlet;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
 import org.eclipse.jetty.util.resource.Resource;
+import org.eclipse.jetty.websocket.jsr356.server.ServerContainer;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.glassfish.jersey.servlet.ServletContainer;
 
@@ -47,34 +50,29 @@ public final class Launcher {
 
     DataAccess dataAccess = DataAccessFactory.create(config);
     Cache cache = CacheFactory.create(config);
-    SessionCache sessionCache = new HashMapSessionCache();
+    EventPubSub eventPubSub = EventPubSubFactory.create(config);
     ExecutorService executorService = Executors.newFixedThreadPool(config.getDataThreads());
     Service service = new Service(dataAccess, cache, executorService, config.getDataSize());
-
     Server server = createServer(config.getHttpPort());
     ServletContextHandler context = createContext(CONTEXT_PATH, BASE_RESOURCE, WELCOME_FILES);
 
-    context.addServlet(
-      new ServletHolder(
-        new ServletContainer(
-          new RestServlet(service))),
-      REST_SERVLET_PATH);
-
-    context.addServlet(
-      new ServletHolder(new WebServlet(service)),
-      WEB_SERVLET_PATH);
-
-    WebSocketServerContainerInitializer
-      .configureContext(context)
-      .addEndpoint(ServerEndpointConfig.Builder
-        .create(EventSocket.class, WEB_SOCKET_SERVLET_PATH)
-        .configurator(new EventSocketConfigurator(sessionCache))
-        .build());
-
-    context.addServlet(DefaultServlet.class, DEFAULT_SERVLET_PATH);
+    addRestServlet(context, service);
+    addWebServlet(context, service);
+    addWebSocketServlet(context, eventPubSub);
+    addDefaultServlet(context);
 
     server.setHandler(context);
     server.start();
+  }
+
+  private static Server createServer(final int port) {
+
+    Server server = new Server();
+    ServerConnector connector = new ServerConnector(server);
+    connector.setPort(port);
+    server.setConnectors(new Connector[]{connector});
+
+    return server;
   }
 
   private static ServletContextHandler createContext(
@@ -89,15 +87,36 @@ public final class Launcher {
     return context;
   }
 
-  private static Server createServer(final int port) {
+  private static void addDefaultServlet(final ServletContextHandler context) {
 
-    Server server = new Server();
-    ServerConnector connector = new ServerConnector(server);
-    connector.setPort(port);
-    connector.setIdleTimeout(IDLE_TIMEOUT);
-    server.setConnectors(new Connector[]{connector});
+    context.addServlet(DefaultServlet.class, DEFAULT_SERVLET_PATH);
+  }
 
-    return server;
+  private static void addWebSocketServlet(
+    final ServletContextHandler context, final EventPubSub eventPubSub) throws Exception {
+
+    ServerContainer container = WebSocketServerContainerInitializer.configureContext(context);
+    container.setDefaultMaxSessionIdleTimeout(IDLE_TIMEOUT);
+    container.addEndpoint(ServerEndpointConfig.Builder
+      .create(EventSocket.class, WEB_SOCKET_SERVLET_PATH)
+      .configurator(new EventSocketConfigurator(eventPubSub))
+      .build());
+  }
+
+  private static void addWebServlet(final ServletContextHandler context, final Service service) {
+
+    context.addServlet(
+      new ServletHolder(new WebServlet(service)),
+      WEB_SERVLET_PATH);
+  }
+
+  private static void addRestServlet(final ServletContextHandler context, final Service service) {
+
+    context.addServlet(
+      new ServletHolder(
+        new ServletContainer(
+          new RestServlet(service))),
+      REST_SERVLET_PATH);
   }
 
   private static final class CacheFactory {
@@ -118,7 +137,7 @@ public final class Launcher {
       return cache;
     }
 
-    private static StatefulRedisConnection createRedisconnection(final Configuration config) {
+    private static StatefulRedisConnection<String, String> createRedisconnection(final Configuration config) {
 
       return RedisClient.create(RedisURI.Builder
         .redis(config.getCacheHostname())
@@ -158,8 +177,42 @@ public final class Launcher {
       } catch (final Exception e) {
         throw new RuntimeException(e);
       }
-      
+
       return minioClient;
+    }
+  }
+
+  private static final class EventPubSubFactory {
+
+    public static EventPubSub create(final Configuration config) {
+
+      EventPubSub eventPubSub;
+
+      if (!config.getPubSubHostname().isEmpty() && config.getPubSubPort() > 0) {
+
+        eventPubSub = new RedisEventPubSub(
+          createRedisPubSubconnection(config),
+          createRedisPubSubconnection(config));
+
+      } else {
+
+        eventPubSub = new ArrayListEventPubSub();
+      }
+
+      eventPubSub.addConsumer(EventSocket.BROADCAST_CONSUMER);
+
+      return eventPubSub;
+    }
+
+    private static StatefulRedisPubSubConnection<String, String> createRedisPubSubconnection(
+      final Configuration config) {
+
+      return RedisClient.create(RedisURI.Builder
+        .redis(config.getPubSubHostname())
+        .withPort(config.getPubSubPort())
+        .withPassword(config.getPubSubPassword())
+        .build())
+        .connectPubSub();
     }
   }
 }

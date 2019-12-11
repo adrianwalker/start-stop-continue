@@ -1,3 +1,5 @@
+/* global boardId */
+
 "use strict";
 
 $(document).ready(function () {

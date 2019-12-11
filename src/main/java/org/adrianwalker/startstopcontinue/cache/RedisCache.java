@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import io.lettuce.core.api.StatefulRedisConnection;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -23,6 +24,7 @@ public final class RedisCache implements Cache {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String FIELD_SEPERATOR = "/";
+  private static final List<Note> EMPTY_NOTES = Collections.EMPTY_LIST;
   private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
   private static final Collector<Map.Entry<String, String>, ?, Map<Column, List<Note>>> NOTE_COLLECTOR = toMap(
     entry -> Column.valueOf(fieldHead(entry.getKey())),
@@ -118,17 +120,17 @@ public final class RedisCache implements Cache {
 
   private void hset(final String key, final String field, final String value) {
 
-    redisConnection.sync().hset(key, field, value);
+    redisConnection.async().hset(key, field, value);
   }
 
   private void hmset(final String key, final Map<String, String> hash) {
 
-    redisConnection.sync().hmset(key, hash);
+    redisConnection.async().hmset(key, hash);
   }
 
   private void hdel(final String key, final String... members) {
 
-    redisConnection.sync().hdel(key, members);
+    redisConnection.async().hdel(key, members);
   }
 
   private String writeNote(final Note note) {
@@ -146,9 +148,15 @@ public final class RedisCache implements Cache {
     Map<Column, List<Note>> columns = notes.entrySet().stream().collect(NOTE_COLLECTOR);
 
     return new Board().setId(boardId)
-      .setStarts(columns.get(Column.START).stream().sorted(NOTE_COMPARATOR).collect(toList()))
-      .setStops(columns.get(Column.STOP).stream().sorted(NOTE_COMPARATOR).collect(toList()))
-      .setContinues(columns.get(Column.CONTINUE).stream().sorted(NOTE_COMPARATOR).collect(toList()));
+      .setStarts(columns.getOrDefault(Column.START, EMPTY_NOTES).stream()
+        .sorted(NOTE_COMPARATOR)
+        .collect(toList()))
+      .setStops(columns.getOrDefault(Column.STOP, EMPTY_NOTES).stream()
+        .sorted(NOTE_COMPARATOR)
+        .collect(toList()))
+      .setContinues(columns.getOrDefault(Column.CONTINUE, EMPTY_NOTES).stream()
+        .sorted(NOTE_COMPARATOR)
+        .collect(toList()));
   }
 
   private void toCache(final UUID boardId, final Board board) {

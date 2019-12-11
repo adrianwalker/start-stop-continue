@@ -22,6 +22,10 @@ public final class Configuration {
   private static final String DATA_PATH = "STARTSTOPCONTINUE_DATA_PATH";
   private static final String DATA_SIZE = "STARTSTOPCONTINUE_DATA_SIZE";
 
+  private static final String PUBSUB_HOSTNAME = "STARTSTOPCONTINUE_PUBSUB_HOSTNAME";
+  private static final String PUBSUB_PORT = "STARTSTOPCONTINUE_PUBSUB_PORT";
+  private static final String PUBSUB_PASSWORD = "STARTSTOPCONTINUE_PUBSUB_PASSWORD";
+
   /*
   Configuration defaults
    */
@@ -39,6 +43,10 @@ public final class Configuration {
   private static final String DEFAULT_DATA_THREADS = "8";
   private static final String DEFAULT_DATA_PATH = "/var/tmp/startstopcontinue";
   private static final String DEFAULT_DATA_SIZE = "1024";
+
+  private static final String DEFAULT_PUBSUB_HOSTNAME = "";
+  private static final String DEFAULT_PUBSUB_PORT = "0";
+  private static final String DEFAULT_PUBSUB_PASSWORD = "";
 
   public int getHttpPort() {
 
@@ -98,5 +106,20 @@ public final class Configuration {
   public int getDataSize() {
 
     return Integer.valueOf(System.getenv().getOrDefault(DATA_SIZE, DEFAULT_DATA_SIZE));
+  }
+
+  public String getPubSubHostname() {
+
+    return System.getenv().getOrDefault(PUBSUB_HOSTNAME, DEFAULT_PUBSUB_HOSTNAME);
+  }
+
+  public int getPubSubPort() {
+
+    return Integer.valueOf(System.getenv().getOrDefault(PUBSUB_PORT, DEFAULT_PUBSUB_PORT));
+  }
+
+  public String getPubSubPassword() {
+
+    return System.getenv().getOrDefault(PUBSUB_PASSWORD, DEFAULT_PUBSUB_PASSWORD);
   }
 }
