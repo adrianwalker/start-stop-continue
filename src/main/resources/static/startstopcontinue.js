@@ -52,7 +52,7 @@ $(document).ready(function () {
       $(data.continues).each(function (index, data) {
         loadNote(boardId, 'CONTINUE', data);
       });
-    });
+    }).fail(handleFailure);
   }
 
   function scrollNote(noteId) {
@@ -69,7 +69,7 @@ $(document).ready(function () {
     saveNote(boardId, column, note).done(function (data) {
       loadNote(boardId, column, {id: data.id, color: note.color, text: note.text});
       scrollNote(data.id);
-    });
+    }).fail(handleFailure);
   }
 
   function loadNote(boardId, column, note) {
@@ -83,20 +83,21 @@ $(document).ready(function () {
         deleteNote(boardId, column, note.id).done(function (data) {
           $("#" + data.id).remove();
           sendEvent(boardId, column, {id: note.id, color: note.color, text: text});
-        });
+
+        }).fail(handleFailure);
 
       } else if (text === "export") {
 
         deleteNote(boardId, column, note.id).done(function (data) {
           $("#" + data.id).remove();
           window.location = "api/board/" + boardId + "/export";
-        });
+        }).fail(handleFailure);
 
       } else {
 
         updateNote(boardId, column, {id: note.id, text: text}).done(function (data) {
           sendEvent(boardId, column, {id: note.id, color: note.color, text: text});
-        });
+        }).fail(handleFailure);
       }
     });
   }
@@ -168,5 +169,14 @@ $(document).ready(function () {
     } else if (note.id && note.text) {
       loadNote(boardId, column, note);
     }
+  }
+
+  function handleFailure(error) {
+
+    var error = $("#error");
+    error.show();
+    error.click(function () {
+      error.hide();
+    });
   }
 });
