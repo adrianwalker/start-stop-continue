@@ -20,22 +20,23 @@ import org.adrianwalker.startstopcontinue.model.Note;
 
 public final class MinioDataAccess implements DataAccess {
 
-  private static final String BUCKET_NAME = "start-stop-continue";
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String NAME_DELIMITER = "/";
   private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
 
   private final MinioClient minioClient;
+  private final String bucketName;
 
-  public MinioDataAccess(final MinioClient minioClient) {
+  public MinioDataAccess(final MinioClient minioClient, final String bucketName) {
 
     this.minioClient = minioClient;
+    this.bucketName = bucketName;
 
     try {
-      boolean bucketExists = minioClient.bucketExists(BUCKET_NAME);
+      boolean bucketExists = minioClient.bucketExists(bucketName);
 
       if (!bucketExists) {
-        minioClient.makeBucket(BUCKET_NAME);
+        minioClient.makeBucket(bucketName);
       }
     } catch (final Exception e) {
       throw new RuntimeException(e);
@@ -73,7 +74,7 @@ public final class MinioDataAccess implements DataAccess {
   public void deleteNote(final UUID boardId, final Column column, final UUID noteId) {
 
     try {
-      minioClient.removeObject(BUCKET_NAME, noteName(boardId, column, noteId));
+      minioClient.removeObject(this.bucketName, noteName(boardId, column, noteId));
     } catch (final Exception e) {
       throw new RuntimeException(e);
     }
@@ -105,7 +106,7 @@ public final class MinioDataAccess implements DataAccess {
 
     Stream<Result<Item>> results = StreamSupport
       .stream(minioClient
-        .listObjects(BUCKET_NAME, columnName, true)
+        .listObjects(this.bucketName, columnName, true)
         .spliterator(), true);
 
     Stream<Note> notes = results.map(result -> {
@@ -127,7 +128,7 @@ public final class MinioDataAccess implements DataAccess {
         PipedOutputStream pos = new PipedOutputStream(pis)) {
 
       OBJECT_MAPPER.writeValue(pos, note);
-      minioClient.putObject(BUCKET_NAME, name, pis, MediaType.APPLICATION_JSON);
+      minioClient.putObject(this.bucketName, name, pis, MediaType.APPLICATION_JSON);
 
     } catch (final Exception e) {
       throw new RuntimeException(e);
@@ -136,7 +137,7 @@ public final class MinioDataAccess implements DataAccess {
 
   private Note readNote(final String name) {
 
-    try ( InputStream is = minioClient.getObject(BUCKET_NAME, name)) {
+    try ( InputStream is = minioClient.getObject(this.bucketName, name)) {
 
       return OBJECT_MAPPER.readValue(is, Note.class);
 

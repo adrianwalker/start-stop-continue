@@ -127,7 +127,7 @@ public final class Launcher {
 
       if (!config.getCacheHostname().isEmpty() && config.getCachePort() > 0) {
 
-        cache = new RedisCache(createRedisconnection(config));
+        cache = new RedisCache(createRedisConnection(config));
 
       } else {
 
@@ -137,7 +137,7 @@ public final class Launcher {
       return cache;
     }
 
-    private static StatefulRedisConnection<String, String> createRedisconnection(final Configuration config) {
+    private static StatefulRedisConnection<String, String> createRedisConnection(final Configuration config) {
 
       return RedisClient.create(RedisURI.Builder
         .redis(config.getCacheHostname())
@@ -156,7 +156,7 @@ public final class Launcher {
 
       if (!config.getDataEndpoint().isEmpty() && config.getDataPort() > 0) {
 
-        dataAccess = new MinioDataAccess(createMinioClient(config));
+        dataAccess = new MinioDataAccess(createMinioClient(config), config.getDataBucket());
 
       } else {
 

@@ -20,8 +20,9 @@ public final class Configuration {
   private static final String DATA_SECRET_KEY = "STARTSTOPCONTINUE_DATA_SECRET_KEY";
   private static final String DATA_SECURE = "STARTSTOPCONTINUE_DATA_SECURE";
   private static final String DATA_REGION = "STARTSTOPCONTINUE_DATA_REGION";
-  private static final String DATA_THREADS = "STARTSTOPCONTINUE_DATA_THREADS";
+  private static final String DATA_BUCKET = "STARTSTOPCONTINUE_DATA_BUCKET";
   private static final String DATA_PATH = "STARTSTOPCONTINUE_DATA_PATH";
+  private static final String DATA_THREADS = "STARTSTOPCONTINUE_DATA_THREADS";
   private static final String DATA_SIZE = "STARTSTOPCONTINUE_DATA_SIZE";
 
   private static final String PUBSUB_HOSTNAME = "STARTSTOPCONTINUE_PUBSUB_HOSTNAME";
@@ -44,8 +45,9 @@ public final class Configuration {
   private static final String DEFAULT_DATA_SECRET_KEY = "";
   private static final String DEFAULT_DATA_SECURE = "false";
   private static final String DEFAULT_DATA_REGION = "";
-  private static final String DEFAULT_DATA_THREADS = "8";
+  private static final String DEFAULT_DATA_BUCKET = "";
   private static final String DEFAULT_DATA_PATH = "/var/tmp/startstopcontinue";
+  private static final String DEFAULT_DATA_THREADS = "8";
   private static final String DEFAULT_DATA_SIZE = "1024";
 
   private static final String DEFAULT_PUBSUB_HOSTNAME = "";
@@ -106,15 +108,20 @@ public final class Configuration {
 
     return System.getenv().getOrDefault(DATA_REGION, DEFAULT_DATA_REGION);
   }
-
-  public int getDataThreads() {
-
-    return Integer.valueOf(System.getenv().getOrDefault(DATA_THREADS, DEFAULT_DATA_THREADS));
+  
+  public String getDataBucket() {
+    
+    return System.getenv().getOrDefault(DATA_BUCKET, DEFAULT_DATA_BUCKET);
   }
 
   public Path getDataPath() {
 
     return Path.of(System.getenv().getOrDefault(DATA_PATH, DEFAULT_DATA_PATH));
+  }
+
+  public int getDataThreads() {
+
+    return Integer.valueOf(System.getenv().getOrDefault(DATA_THREADS, DEFAULT_DATA_THREADS));
   }
 
   public int getDataSize() {
