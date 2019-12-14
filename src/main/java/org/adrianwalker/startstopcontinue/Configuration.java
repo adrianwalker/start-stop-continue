@@ -18,6 +18,8 @@ public final class Configuration {
   private static final String DATA_PORT = "STARTSTOPCONTINUE_DATA_PORT";
   private static final String DATA_ACCESS_KEY = "STARTSTOPCONTINUE_DATA_ACCESS_KEY";
   private static final String DATA_SECRET_KEY = "STARTSTOPCONTINUE_DATA_SECRET_KEY";
+  private static final String DATA_SECURE = "STARTSTOPCONTINUE_DATA_SECURE";
+  private static final String DATA_REGION = "STARTSTOPCONTINUE_DATA_REGION";
   private static final String DATA_THREADS = "STARTSTOPCONTINUE_DATA_THREADS";
   private static final String DATA_PATH = "STARTSTOPCONTINUE_DATA_PATH";
   private static final String DATA_SIZE = "STARTSTOPCONTINUE_DATA_SIZE";
@@ -40,6 +42,8 @@ public final class Configuration {
   private static final String DEFAULT_DATA_PORT = "0";
   private static final String DEFAULT_DATA_ACCESS_KEY = "";
   private static final String DEFAULT_DATA_SECRET_KEY = "";
+  private static final String DEFAULT_DATA_SECURE = "false";
+  private static final String DEFAULT_DATA_REGION = "";
   private static final String DEFAULT_DATA_THREADS = "8";
   private static final String DEFAULT_DATA_PATH = "/var/tmp/startstopcontinue";
   private static final String DEFAULT_DATA_SIZE = "1024";
@@ -91,6 +95,16 @@ public final class Configuration {
   public String getDataSecretKey() {
 
     return System.getenv().getOrDefault(DATA_SECRET_KEY, DEFAULT_DATA_SECRET_KEY);
+  }
+
+  public boolean getDataSecure() {
+
+    return Boolean.valueOf(System.getenv().getOrDefault(DATA_SECURE, DEFAULT_DATA_SECURE));
+  }
+
+  public String getDataRegion() {
+
+    return System.getenv().getOrDefault(DATA_REGION, DEFAULT_DATA_REGION);
   }
 
   public int getDataThreads() {

@@ -172,7 +172,8 @@ public final class Launcher {
       try {
         minioClient = new MinioClient(
           config.getDataEndpoint(), config.getDataPort(),
-          config.getDataAccessKey(), config.getDataSecretKey());
+          config.getDataAccessKey(), config.getDataSecretKey(),
+          config.getDataRegion(), config.getDataSecure());
 
       } catch (final Exception e) {
         throw new RuntimeException(e);

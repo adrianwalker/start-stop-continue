@@ -15,6 +15,14 @@
 #export STARTSTOPCONTINUE_DATA_ACCESS_KEY=accesskey
 #export STARTSTOPCONTINUE_DATA_SECRET_KEY=secretkey
 
+# S3
+#export STARTSTOPCONTINUE_DATA_ENDPOINT=http://start-stop-continue.s3.eu-west-2.amazonaws.com
+#export STARTSTOPCONTINUE_DATA_PORT=80
+#export STARTSTOPCONTINUE_DATA_ACCESS_KEY=accesskey
+#export STARTSTOPCONTINUE_DATA_SECRET_KEY=secretkey
+#export STARTSTOPCONTINUE_DATA_SECURE=false
+#export STARTSTOPCONTINUE_DATA_REGION=eu-west-2
+
 export STARTSTOPCONTINUE_DATA_PATH=/var/tmp/ststpcnt.com
 
 java -server -Xmx512M -jar start-stop-continue-jar-with-dependencies.jar
