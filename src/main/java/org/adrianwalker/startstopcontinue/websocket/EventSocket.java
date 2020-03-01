@@ -19,6 +19,7 @@ import org.adrianwalker.startstopcontinue.cache.pubsub.Event;
 @ServerEndpoint("")
 public final class EventSocket {
 
+  private static final String PING_MESSAGE = "ping";
   private static final String BOARD_ID = "boardId";
   private static final Map<UUID, Set<Session>> SESSIONS = new HashMap<>();
   private final EventPubSub eventPubSub;
@@ -45,6 +46,14 @@ public final class EventSocket {
 
   @OnMessage
   public void onMessage(final Session session, final String message) {
+
+    if (message.isEmpty()) {
+      return;
+    }
+
+    if (PING_MESSAGE.equals(message)) {
+      return;
+    }
 
     eventPubSub.publish(getBoardId(session), new Event().setId(session.getId()).setData(message));
   }

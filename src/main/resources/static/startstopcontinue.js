@@ -11,6 +11,7 @@ $(document).ready(function () {
   };
 
   var webSocket = openWebSocket(boardId);
+  startWebSocketPing(60 * 1000);
   loadBoard(boardId);
 
   $("#add-start").click(function () {
@@ -31,7 +32,7 @@ $(document).ready(function () {
             + '  <textarea>' + text + '</textarea>'
             + '</li>';
   }
-
+  
   function loadBoard(boardId) {
 
     var url = "api/board/" + boardId;
@@ -139,8 +140,13 @@ $(document).ready(function () {
       var data = JSON.parse(event.data);
       handleEvent(data.boardId, data.column, data.note);
     };
-
+    
     return webSocket;
+  }
+  
+  function startWebSocketPing(delay) {
+    
+    setInterval(sendPing, delay);
   }
 
   function isWebSocketOpen(webSocket) {
@@ -154,6 +160,15 @@ $(document).ready(function () {
     }
 
     webSocket.send(JSON.stringify({boardId: boardId, column: column, note: note}));
+  }
+
+  function sendPing() {
+
+    if (!isWebSocketOpen(webSocket)) {
+      webSocket = openWebSocket(boardId);
+    }
+
+    webSocket.send("ping");
   }
 
   function handleEvent(boardId, column, note) {
