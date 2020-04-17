@@ -48,13 +48,13 @@ public final class RestServiceTest {
     executorService = Executors.newFixedThreadPool(THREADS);
 
     List<Note> starts = new ArrayList<>();
-    starts.add(new Note().setId(NOTE_ID_1).setColor("#ffffff").setText("Start"));
+    starts.add(new Note().setId(NOTE_ID_1).setColor("#ffffff").setText("Start").setVersion(1));
 
     List<Note> stops = new ArrayList<>();
-    stops.add(new Note().setId(NOTE_ID_2).setColor("#ffffff").setText("Stop"));
+    stops.add(new Note().setId(NOTE_ID_2).setColor("#ffffff").setText("Stop").setVersion(1));
 
     List<Note> continues = new ArrayList<>();
-    continues.add(new Note().setId(NOTE_ID_3).setColor("#ffffff").setText("Continue"));
+    continues.add(new Note().setId(NOTE_ID_3).setColor("#ffffff").setText("Continue").setVersion(1));
 
     when(dataAccess.readBoard(any(UUID.class))).thenReturn(new Board()
       .setId(BOARD_ID)

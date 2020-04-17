@@ -8,6 +8,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import static java.util.stream.Collectors.toList;
 import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
@@ -47,7 +48,12 @@ public final class Service {
 
   public final Board readBoard(final UUID boardId) {
 
-    return cache.readThrough(boardId, f -> dataAccess.readBoard(boardId));
+    Board board = cache.readThrough(boardId, f -> dataAccess.readBoard(boardId));
+    board.setStarts(board.getStarts().stream().filter(s -> s.getVersion() > 0).collect(toList()));
+    board.setStops(board.getStops().stream().filter(s -> s.getVersion() > 0).collect(toList()));
+    board.setContinues(board.getContinues().stream().filter(c -> c.getVersion() > 0).collect(toList()));
+
+    return board;
   }
 
   public final void createNote(final UUID boardId, final Column column, final Note note) {
@@ -60,10 +66,11 @@ public final class Service {
     cache.write(boardId, column, note);
   }
 
-  public final void updateNote(final UUID boardId, final Column column, final Note data) {
+  public final void updateNote(final UUID boardId, final Column column, final Note update) {
 
-    Note note = cache.read(boardId, column, data.getId())
-      .setText(truncateNoteText(data.getText()));
+    Note note = cache.read(boardId, column, update.getId())
+      .setText(truncateNoteText(update.getText()))
+      .incrementVersion();
 
     executor.execute(() -> dataAccess.updateNote(boardId, column, note));
     cache.write(boardId, column, note);
