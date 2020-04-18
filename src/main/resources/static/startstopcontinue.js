@@ -58,14 +58,17 @@ $(document).ready(function () {
       contentType: 'application/json'
     }).done(function (data) {
 
+      COLUMNS['START'].empty();
       $(data.starts).each(function (index, data) {
         loadNote(boardId, 'START', data);
       });
 
+      COLUMNS['STOP'].empty();
       $(data.stops).each(function (index, data) {
         loadNote(boardId, 'STOP', data);
       });
 
+      COLUMNS['CONTINUE'].empty();
       $(data.continues).each(function (index, data) {
         loadNote(boardId, 'CONTINUE', data);
       });
