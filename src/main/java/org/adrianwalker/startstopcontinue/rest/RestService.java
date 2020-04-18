@@ -1,6 +1,5 @@
 package org.adrianwalker.startstopcontinue.rest;
 
-import static java.lang.String.format;
 import java.util.UUID;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -12,7 +11,6 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.ID;
 import org.adrianwalker.startstopcontinue.model.Note;
@@ -21,10 +19,6 @@ import org.apache.commons.lang.StringEscapeUtils;
 
 @Path("")
 public class RestService {
-
-  private static final String[] EXPORT_HEADER = {
-    "Content-Disposition", "attachment; filename=\"%s.txt\""
-  };
 
   private final Service service;
 

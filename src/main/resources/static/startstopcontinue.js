@@ -2,8 +2,23 @@
 
 "use strict";
 
+var UUID = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
+
+function uuid() {
+
+  var dt = new Date().getTime();
+  var uuid = UUID.replace(/[xy]/g, function (c) {
+    var r = (dt + Math.random() * 16) % 16 | 0;
+    dt = Math.floor(dt / 16);
+    return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
+  });
+
+  return uuid;
+}
+
 $(document).ready(function () {
 
+  var _TEMP = "_temp";
   var COLUMNS = {
     "START": $("#start-list"),
     "STOP": $("#stop-list"),
@@ -16,20 +31,20 @@ $(document).ready(function () {
   startWebSocketPing(60 * 1000);
 
   $("#add-start").click(function () {
-    addNote(boardId, "START", {color: $("#start-color").val(), text: "Start "});
+    addNote(boardId, "START", {id: uuid() + _TEMP, color: $("#start-color").val(), text: "Start "});
   });
 
   $("#add-stop").click(function () {
-    addNote(boardId, "STOP", {color: $("#stop-color").val(), text: "Stop "});
+    addNote(boardId, "STOP", {id: uuid() + _TEMP, color: $("#stop-color").val(), text: "Stop "});
   });
 
   $("#add-continue").click(function () {
-    addNote(boardId, "CONTINUE", {color: $("#continue-color").val(), text: "Continue "});
+    addNote(boardId, "CONTINUE", {id: uuid() + _TEMP, color: $("#continue-color").val(), text: "Continue "});
   });
 
   function noteHtml(id, color, text) {
 
-    return '<li id="' + id + '" style="background-color: ' + color + '">'
+    return '<li id="' + id + '" server-id="' + id + '" style="background-color: ' + color + '">'
             + '  <textarea>' + text + '</textarea>'
             + '</li>';
   }
@@ -68,10 +83,8 @@ $(document).ready(function () {
 
   function addNote(boardId, column, note) {
 
-    saveNote(boardId, column, note).done(function (data) {
-      loadNote(boardId, column, {id: data.id, color: note.color, text: note.text});
-      scrollNote(data.id);
-    }).fail(handleFailure);
+    loadNote(boardId, column, {id: note.id, color: note.color, text: note.text});
+    scrollNote(note.id);
   }
 
   function loadNote(boardId, column, note) {
@@ -80,25 +93,36 @@ $(document).ready(function () {
     COLUMNS[column].on('change', '#' + note.id + ' > textarea', function () {
 
       var text = $("#" + note.id + " > textarea").val().trim();
-      if (text === "") {
+      var serverId = $("#" + note.id).attr("server-id");
 
-        deleteNote(boardId, column, note.id).done(function (data) {
-          $("#" + data.id).remove();
-          sendEvent(boardId, column, {id: note.id, color: note.color, text: text});
+      if (text === "" && serverId.endsWith(_TEMP)) {
+
+        $("#" + note.id).remove();
+
+      } else if (text === "") {
+
+        deleteNote(boardId, column, serverId).done(function (data) {
+
+          $("li[server-id='" + data.id + "']").remove();
+          sendEvent(boardId, column, {id: data.id, color: note.color, text: text});
 
         }).fail(handleFailure);
 
-      } else if (text === "export") {
+      } else if (serverId.endsWith(_TEMP)) {
 
-        deleteNote(boardId, column, note.id).done(function (data) {
-          $("#" + data.id).remove();
-          window.location = "api/board/" + boardId + "/export";
+        saveNote(boardId, column, {color: note.color, text: text}).done(function (data) {
+
+          $("#" + note.id).attr("server-id", data.id);
+          sendEvent(boardId, column, {id: data.id, color: note.color, text: text});
+
         }).fail(handleFailure);
 
       } else {
 
-        updateNote(boardId, column, {id: note.id, text: text}).done(function (data) {
-          sendEvent(boardId, column, {id: note.id, color: note.color, text: text});
+        updateNote(boardId, column, {id: serverId, text: text}).done(function (data) {
+
+          sendEvent(boardId, column, {id: data.id, color: note.color, text: text});
+
         }).fail(handleFailure);
       }
     });
@@ -176,12 +200,12 @@ $(document).ready(function () {
 
   function handleEvent(boardId, column, note) {
 
-    if (note.id && $("#" + note.id).length) {
+    if (note.id && $("li[server-id='" + note.id + "']").length) {
 
       if (note.text) {
-        $("#" + note.id + " > textarea").val(note.text);
+        $("li[server-id='" + note.id + "'] > textarea").val(note.text);
       } else {
-        $("#" + note.id).remove();
+        $("li[server-id='" + note.id + "']").remove();
       }
 
     } else if (note.id && note.text) {
