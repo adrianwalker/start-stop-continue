@@ -1,9 +1,5 @@
 package org.adrianwalker.startstopcontinue.service;
 
-import java.io.ByteArrayOutputStream;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -49,13 +45,13 @@ public final class ServiceTest {
     executorService = Executors.newFixedThreadPool(THREADS);
 
     List<Note> starts = new ArrayList<>();
-    starts.add(new Note().setId(NOTE_ID_1).setColor("#ffffff").setText("Start").setVersion(1));
+    starts.add(new Note().setId(NOTE_ID_1).setColor("#ffffff").setText("Start"));
 
     List<Note> stops = new ArrayList<>();
-    stops.add(new Note().setId(NOTE_ID_2).setColor("#ffffff").setText("Stop").setVersion(1));
+    stops.add(new Note().setId(NOTE_ID_2).setColor("#ffffff").setText("Stop"));
 
     List<Note> continues = new ArrayList<>();
-    continues.add(new Note().setId(NOTE_ID_3).setColor("#ffffff").setText("Continue").setVersion(1));
+    continues.add(new Note().setId(NOTE_ID_3).setColor("#ffffff").setText("Continue"));
 
     when(dataAccess.readBoard(any(UUID.class))).thenReturn(new Board()
       .setId(BOARD_ID)
@@ -214,32 +210,5 @@ public final class ServiceTest {
     verify(dataAccess).createNote(any(UUID.class), any(Column.class), noteCaptor.capture());
 
     assertNotNull("a", noteCaptor.getValue().getText());
-  }
-
-  @Test
-  public void testExportBoard() {
-
-    OutputStream baos = new ByteArrayOutputStream();
-
-    Service service = new Service(dataAccess, nonCachingCache(), executorService, 0);
-    service.exportBoard(BOARD_ID, baos);
-
-    String export = baos.toString();
-
-    assertEquals("START\r\n\r\nStart\r\n\r\nSTOP\r\n\r\nStop\r\n\r\nCONTINUE\r\n\r\nContinue", export);
-  }
-
-  @Test(expected = RuntimeException.class)
-  public void testExportBoardException() throws FileNotFoundException {
-
-    OutputStream baos = new OutputStream() {
-      @Override
-      public void write(int b) throws IOException {
-        throw new IOException();
-      }
-    };
-
-    Service service = new Service(dataAccess, nonCachingCache(), executorService, 1024);
-    service.exportBoard(BOARD_ID, baos);
   }
 }

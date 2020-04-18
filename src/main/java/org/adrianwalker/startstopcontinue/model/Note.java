@@ -7,7 +7,6 @@ public final class Note extends Idable<Note> {
   private Date created;
   private String color;
   private String text;
-  private int version;
 
   public Date getCreated() {
     return created;
@@ -33,20 +32,6 @@ public final class Note extends Idable<Note> {
 
   public Note setText(final String text) {
     this.text = text;
-    return this;
-  }
-
-  public int getVersion() {
-    return version;
-  }
-
-  public Note setVersion(final int version) {
-    this.version = version;
-    return this;
-  }
-
-  public Note incrementVersion() {
-    this.version = this.version + 1;
     return this;
   }
 }

@@ -1,7 +1,5 @@
 package org.adrianwalker.startstopcontinue.rest;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -9,7 +7,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
-import javax.ws.rs.core.StreamingOutput;
 import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
@@ -48,13 +45,13 @@ public final class RestServiceTest {
     executorService = Executors.newFixedThreadPool(THREADS);
 
     List<Note> starts = new ArrayList<>();
-    starts.add(new Note().setId(NOTE_ID_1).setColor("#ffffff").setText("Start").setVersion(1));
+    starts.add(new Note().setId(NOTE_ID_1).setColor("#ffffff").setText("Start"));
 
     List<Note> stops = new ArrayList<>();
-    stops.add(new Note().setId(NOTE_ID_2).setColor("#ffffff").setText("Stop").setVersion(1));
+    stops.add(new Note().setId(NOTE_ID_2).setColor("#ffffff").setText("Stop"));
 
     List<Note> continues = new ArrayList<>();
-    continues.add(new Note().setId(NOTE_ID_3).setColor("#ffffff").setText("Continue").setVersion(1));
+    continues.add(new Note().setId(NOTE_ID_3).setColor("#ffffff").setText("Continue"));
 
     when(dataAccess.readBoard(any(UUID.class))).thenReturn(new Board()
       .setId(BOARD_ID)
@@ -105,24 +102,6 @@ public final class RestServiceTest {
     assertEquals("Start", board.getStarts().get(0).getText());
     assertEquals("Stop", board.getStops().get(0).getText());
     assertEquals("Continue", board.getContinues().get(0).getText());
-  }
-
-  @Test
-  public void testExportBoard() throws IOException {
-
-    RestService restService = new RestService(service);
-    Response response = restService.exportBoard(BOARD_ID);
-
-    ByteArrayOutputStream output = new ByteArrayOutputStream();
-    StreamingOutput stream = (StreamingOutput) response.getEntity();
-    stream.write(output);
-
-    assertEquals(Response.Status.OK.getStatusCode(), response.getStatus());
-    assertEquals(
-      "START\r\n\r\nStart\r\n\r\n"
-      + "STOP\r\n\r\nStop\r\n\r\n"
-      + "CONTINUE\r\n\r\nContinue",
-      new String(output.toByteArray()));
   }
 
   @Test

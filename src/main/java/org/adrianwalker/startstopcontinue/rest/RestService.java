@@ -46,24 +46,6 @@ public class RestService {
       .build();
   }
 
-  @GET
-  @Consumes(MediaType.APPLICATION_JSON)
-  @Produces(MediaType.APPLICATION_OCTET_STREAM)
-  @Path("board/{boardId}/export")
-  public Response exportBoard(
-    @PathParam("boardId")
-    final UUID boardId) {
-
-    StreamingOutput stream = os -> {
-      service.exportBoard(boardId, os);
-    };
-
-    return Response
-      .ok(stream)
-      .header(EXPORT_HEADER[0], format(EXPORT_HEADER[1], boardId.toString()))
-      .build();
-  }
-
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
