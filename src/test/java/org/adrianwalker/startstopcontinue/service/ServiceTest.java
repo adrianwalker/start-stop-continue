@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
-import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
@@ -23,6 +22,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
+import org.adrianwalker.startstopcontinue.cache.ReadThroughCache;
 
 public final class ServiceTest {
 
@@ -60,13 +60,13 @@ public final class ServiceTest {
       .setContinues(continues));
   }
 
-  public static Cache nonCachingCache() {
+  public static ReadThroughCache nonCachingCache(final Function<UUID, Board> readThroughFunction) {
 
-    return new Cache() {
+    return new ReadThroughCache() {
 
       @Override
-      public Board readThrough(UUID boardId, Function<UUID, Board> f) {
-        return f.apply(boardId);
+      public Board read(UUID boardId) {
+        return readThroughFunction.apply(boardId);
       }
 
       @Override
@@ -87,7 +87,10 @@ public final class ServiceTest {
   @Test
   public void testCreateBoard() {
 
-    Service service = new Service(dataAccess, nonCachingCache(), executorService, 0);
+    Service service = new Service(
+      dataAccess, 
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      executorService, 0);
     Board board = service.createBoard();
     assertNotNull(board);
     assertNotNull(board.getId());
@@ -99,7 +102,10 @@ public final class ServiceTest {
   @Test
   public void testReadBoard() {
 
-    Service service = new Service(dataAccess, nonCachingCache(), executorService, 0);
+    Service service = new Service(
+      dataAccess, 
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      executorService, 0);
     Board board = service.readBoard(BOARD_ID);
     assertNotNull(board);
     assertEquals(BOARD_ID, board.getId());
@@ -111,7 +117,10 @@ public final class ServiceTest {
   @Test
   public void testCreateNote() throws InterruptedException {
 
-    Service service = new Service(dataAccess, nonCachingCache(), executorService, 0);
+    Service service = new Service(
+      dataAccess, 
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      executorService, 0);
     service.createNote(BOARD_ID, Column.START, new Note().setColor("#ffffff").setText("Start"));
     service.createNote(BOARD_ID, Column.STOP, new Note().setColor("#ffffff").setText("Stop"));
     service.createNote(BOARD_ID, Column.CONTINUE, new Note().setColor("#ffffff").setText("Continue"));
@@ -142,7 +151,10 @@ public final class ServiceTest {
   @Test
   public void testUpdateNote() throws InterruptedException {
 
-    Service service = new Service(dataAccess, nonCachingCache(), executorService, 0);
+    Service service = new Service(
+      dataAccess, 
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      executorService, 0);
     service.updateNote(BOARD_ID, Column.START, new Note().setId(NOTE_ID_1).setText("Start"));
     service.updateNote(BOARD_ID, Column.STOP, new Note().setId(NOTE_ID_2).setText("Stop"));
     service.updateNote(BOARD_ID, Column.CONTINUE, new Note().setId(NOTE_ID_3).setText("Continue"));
@@ -173,7 +185,10 @@ public final class ServiceTest {
   @Test
   public void testDeleteNote() throws InterruptedException {
 
-    Service service = new Service(dataAccess, nonCachingCache(), executorService, 0);
+    Service service = new Service(
+      dataAccess, 
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      executorService, 0);
     service.deleteNote(BOARD_ID, Column.START, NOTE_ID_1);
     service.deleteNote(BOARD_ID, Column.STOP, NOTE_ID_2);
     service.deleteNote(BOARD_ID, Column.CONTINUE, NOTE_ID_3);
@@ -201,7 +216,10 @@ public final class ServiceTest {
   @Test
   public void testTruncateNote() throws InterruptedException {
 
-    Service service = new Service(dataAccess, nonCachingCache(), executorService, 1);
+    Service service = new Service(
+      dataAccess, 
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      executorService, 0);
     service.createNote(BOARD_ID, Column.START, new Note().setText("abc"));
 
     executorService.awaitTermination(10, TimeUnit.SECONDS);

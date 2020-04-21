@@ -25,8 +25,7 @@ $(document).ready(function () {
     "CONTINUE": $("#continue-list")
   };
 
-  var webSocket = openWebSocket(boardId);
-  loadBoard(boardId);
+  var webSocket = createWebSocket(boardId);
 
   startWebSocketPing(60 * 1000);
 
@@ -160,10 +159,15 @@ $(document).ready(function () {
     });
   }
 
-  function openWebSocket(boardId) {
+  function createWebSocket(boardId) {
 
     var url = "ws://" + window.location.host + window.location.pathname + "events/" + boardId;
     var webSocket = new WebSocket(url);
+
+    webSocket.onopen = function (event) {
+      loadBoard(boardId);
+    };
+
     webSocket.onmessage = function (event) {
       var data = JSON.parse(event.data);
       handleEvent(data.boardId, data.column, data.note);
@@ -184,8 +188,7 @@ $(document).ready(function () {
   function sendEvent(boardId, column, note) {
 
     if (!isWebSocketOpen(webSocket)) {
-      webSocket = openWebSocket(boardId);
-      loadBoard(boardId);
+      webSocket = createWebSocket(boardId);
     }
 
     webSocket.send(JSON.stringify({boardId: boardId, column: column, note: note}));
@@ -194,11 +197,12 @@ $(document).ready(function () {
   function sendPing() {
 
     if (!isWebSocketOpen(webSocket)) {
-      webSocket = openWebSocket(boardId);
-      loadBoard(boardId);
+      webSocket = createWebSocket(boardId);
     }
 
-    webSocket.send("ping");
+    if (isWebSocketOpen(webSocket)) {
+      webSocket.send("ping");
+    }
   }
 
   function handleEvent(boardId, column, note) {

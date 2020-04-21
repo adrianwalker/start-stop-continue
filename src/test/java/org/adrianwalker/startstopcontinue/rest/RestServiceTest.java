@@ -7,7 +7,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import javax.ws.rs.core.Response;
-import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
@@ -21,6 +20,7 @@ import static org.mockito.ArgumentMatchers.any;
 import org.mockito.Mock;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
+import org.adrianwalker.startstopcontinue.cache.ReadThroughCache;
 
 public final class RestServiceTest {
 
@@ -59,16 +59,16 @@ public final class RestServiceTest {
       .setStops(stops)
       .setContinues(continues));
 
-    service = new Service(dataAccess, nonCachingCache(), executorService, 0);
+    service = new Service(dataAccess, nonCachingCache(boardId -> dataAccess.readBoard(boardId)), executorService, 0);
   }
 
-  public static Cache nonCachingCache() {
+  public static ReadThroughCache nonCachingCache(final Function<UUID, Board> readThroughFunction) {
 
-    return new Cache() {
+    return new ReadThroughCache() {
 
       @Override
-      public Board readThrough(UUID boardId, Function<UUID, Board> f) {
-        return f.apply(boardId);
+      public Board read(UUID boardId) {
+        return readThroughFunction.apply(boardId);
       }
 
       @Override

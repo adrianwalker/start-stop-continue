@@ -5,20 +5,20 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
-import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
+import org.adrianwalker.startstopcontinue.cache.ReadThroughCache;
 
 public final class Service {
 
   private final DataAccess dataAccess;
-  private final Cache cache;
+  private final ReadThroughCache cache;
   private final ExecutorService executor;
   private final int maxNoteLength;
 
-  public Service(final DataAccess dataAccess, final Cache cache, final ExecutorService executor, final int maxNoteLength) {
+  public Service(final DataAccess dataAccess, final ReadThroughCache cache, final ExecutorService executor, final int maxNoteLength) {
 
     this.dataAccess = dataAccess;
     this.cache = cache;
@@ -41,7 +41,7 @@ public final class Service {
 
   public final Board readBoard(final UUID boardId) {
 
-    return cache.readThrough(boardId, f -> dataAccess.readBoard(boardId));
+    return cache.read(boardId);
   }
 
   public final void createNote(final UUID boardId, final Column column, final Note note) {

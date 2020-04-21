@@ -5,10 +5,11 @@ import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
 import io.minio.MinioClient;
+import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.function.Function;
 import javax.websocket.server.ServerEndpointConfig;
-import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.cache.LinkedHashMapCache;
 import org.adrianwalker.startstopcontinue.cache.RedisCache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
@@ -32,6 +33,8 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.websocket.jsr356.server.ServerContainer;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.glassfish.jersey.servlet.ServletContainer;
+import org.adrianwalker.startstopcontinue.cache.ReadThroughCache;
+import org.adrianwalker.startstopcontinue.model.Board;
 
 public final class Launcher {
 
@@ -49,7 +52,7 @@ public final class Launcher {
     Configuration config = new Configuration();
 
     DataAccess dataAccess = DataAccessFactory.create(config);
-    Cache cache = CacheFactory.create(config);
+    ReadThroughCache cache = new CacheFactory(boardId -> dataAccess.readBoard(boardId)).create(config);
     EventPubSub eventPubSub = EventPubSubFactory.create(config);
     ExecutorService executorService = Executors.newFixedThreadPool(config.getDataThreads());
     Service service = new Service(dataAccess, cache, executorService, config.getDataSize());
@@ -121,17 +124,24 @@ public final class Launcher {
 
   private static final class CacheFactory {
 
-    public static Cache create(final Configuration config) {
+    private final Function<UUID, Board> readThroughFunction;
 
-      Cache cache;
+    public CacheFactory(final Function<UUID, Board> readThroughFunction) {
+
+      this.readThroughFunction = readThroughFunction;
+    }
+
+    public ReadThroughCache create(final Configuration config) {
+
+      ReadThroughCache cache;
 
       if (!config.getCacheHostname().isEmpty() && config.getCachePort() > 0) {
 
-        cache = new RedisCache(createRedisConnection(config));
+        cache = new RedisCache(createRedisConnection(config), readThroughFunction);
 
       } else {
 
-        cache = new LinkedHashMapCache(config.getCacheSize());
+        cache = new LinkedHashMapCache(config.getCacheSize(), readThroughFunction);
       }
 
       return cache;

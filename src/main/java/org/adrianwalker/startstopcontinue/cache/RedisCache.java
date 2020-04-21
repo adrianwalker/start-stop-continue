@@ -20,7 +20,7 @@ import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 
-public final class RedisCache implements Cache {
+public final class RedisCache implements ReadThroughCache {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String FIELD_SEPERATOR = "/";
@@ -32,14 +32,18 @@ public final class RedisCache implements Cache {
     (n1, n2) -> combineNotes(n1, n2));
 
   private final StatefulRedisConnection<String, String> redisConnection;
+  private final Function<UUID, Board> readThroughFunction;
 
-  public RedisCache(final StatefulRedisConnection<String, String> redisConnection) {
+  public RedisCache(
+    final StatefulRedisConnection<String, String> redisConnection,
+    final Function<UUID, Board> readThroughFunction) {
 
     this.redisConnection = redisConnection;
+    this.readThroughFunction = readThroughFunction;
   }
 
   @Override
-  public Board readThrough(final UUID boardId, final Function<UUID, Board> f) {
+  public Board read(final UUID boardId) {
 
     Board board;
 
@@ -49,7 +53,7 @@ public final class RedisCache implements Cache {
 
     } else {
 
-      board = f.apply(boardId);
+      board = readThroughFunction.apply(boardId);
       toCache(boardId, board);
     }
 
@@ -59,17 +63,29 @@ public final class RedisCache implements Cache {
   @Override
   public Note read(final UUID boardId, final Column column, final UUID noteId) {
 
+    if (!exists(boardId.toString())) {
+      read(boardId);
+    }
+
     return readNote(hget(boardId.toString(), noteField(column, noteId)));
   }
 
   @Override
   public void write(final UUID boardId, final Column column, final Note note) {
 
+    if (!exists(boardId.toString())) {
+      read(boardId);
+    }
+
     hset(boardId.toString(), noteField(column, note.getId()), writeNote(note));
   }
 
   @Override
   public void delete(final UUID boardId, final Column column, final UUID noteId) {
+
+    if (!exists(boardId.toString())) {
+      read(boardId);
+    }
 
     hdel(boardId.toString(), noteField(column, noteId));
   }

@@ -14,7 +14,7 @@ import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 
-public final class LinkedHashMapCache implements Cache {
+public final class LinkedHashMapCache implements ReadThroughCache {
 
   private static final float LOAD_FACTOR = 0.75f;
   private static final boolean ACCESS_ORDER = true;
@@ -22,8 +22,9 @@ public final class LinkedHashMapCache implements Cache {
   private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
 
   private final Map<UUID, Map<Column, Map<UUID, Note>>> cache;
+  private final Function<UUID, Board> readThroughFunction;
 
-  public LinkedHashMapCache(final int cacheSize) {
+  public LinkedHashMapCache(final int cacheSize, final Function<UUID, Board> readThroughFunction) {
 
     cache = new LinkedHashMap(cacheSize + 1, LOAD_FACTOR, ACCESS_ORDER) {
 
@@ -32,10 +33,12 @@ public final class LinkedHashMapCache implements Cache {
         return size() > cacheSize;
       }
     };
+
+    this.readThroughFunction = readThroughFunction;
   }
 
   @Override
-  public Board readThrough(final UUID boardId, final Function<UUID, Board> f) {
+  public Board read(final UUID boardId) {
 
     Board board;
 
@@ -45,7 +48,7 @@ public final class LinkedHashMapCache implements Cache {
 
     } else {
 
-      board = f.apply(boardId);
+      board = readThroughFunction.apply(boardId);
       toCache(boardId, board);
     }
 
@@ -55,17 +58,29 @@ public final class LinkedHashMapCache implements Cache {
   @Override
   public Note read(final UUID boardId, final Column column, final UUID noteId) {
 
+    if (!cache.containsKey(boardId)) {
+      read(boardId);
+    }
+
     return cache.get(boardId).get(column).get(noteId);
   }
 
   @Override
   public void write(final UUID boardId, final Column column, final Note note) {
 
+    if (!cache.containsKey(boardId)) {
+      read(boardId);
+    }
+
     cache.get(boardId).get(column).put(note.getId(), note);
   }
 
   @Override
   public void delete(final UUID boardId, final Column column, final UUID noteId) {
+
+    if (!cache.containsKey(boardId)) {
+      read(boardId);
+    }
 
     cache.get(boardId).get(column).remove(noteId);
   }

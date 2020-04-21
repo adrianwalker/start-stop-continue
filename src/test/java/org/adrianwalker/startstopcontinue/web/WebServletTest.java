@@ -40,7 +40,10 @@ public final class WebServletTest {
   @Test
   public void testDoGetNewBoard() throws Exception {
 
-    Service service = new Service(dataAccess, nonCachingCache(), executorService, 0);
+    Service service = new Service(
+      dataAccess, 
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      executorService, 0);
     WebServlet servlet = new WebServlet(service);
     servlet.doGet(request, response);
 

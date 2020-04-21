@@ -1,14 +1,13 @@
 package org.adrianwalker.startstopcontinue.cache;
 
 import java.util.UUID;
-import java.util.function.Function;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 
-public interface Cache {
+public interface ReadThroughCache {
 
-  Board readThrough(final UUID boardId, final Function<UUID, Board> f);
+  Board read(final UUID boardId);
 
   Note read(final UUID boardId, final Column column, final UUID noteId);
 
