@@ -9,16 +9,16 @@ import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
-import org.adrianwalker.startstopcontinue.cache.ReadThroughCache;
+import org.adrianwalker.startstopcontinue.cache.Cache;
 
 public final class Service {
 
   private final DataAccess dataAccess;
-  private final ReadThroughCache cache;
+  private final Cache cache;
   private final ExecutorService executor;
   private final int maxNoteLength;
 
-  public Service(final DataAccess dataAccess, final ReadThroughCache cache, final ExecutorService executor, final int maxNoteLength) {
+  public Service(final DataAccess dataAccess, final Cache cache, final ExecutorService executor, final int maxNoteLength) {
 
     this.dataAccess = dataAccess;
     this.cache = cache;

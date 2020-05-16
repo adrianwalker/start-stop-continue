@@ -5,7 +5,7 @@ import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 
-public interface ReadThroughCache {
+public interface Cache {
 
   Board read(final UUID boardId);
 

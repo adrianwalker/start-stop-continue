@@ -2,7 +2,7 @@ package org.adrianwalker.startstopcontinue.model;
 
 import java.util.List;
 
-public final class Board extends Idable<Board> {
+public final class Board extends IDable<Board> {
 
   private List<Note> starts;
   private List<Note> stops;

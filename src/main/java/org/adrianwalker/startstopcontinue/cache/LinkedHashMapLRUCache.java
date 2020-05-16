@@ -14,7 +14,7 @@ import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 
-public final class LinkedHashMapCache implements ReadThroughCache {
+public final class LinkedHashMapLRUCache implements Cache {
 
   private static final float LOAD_FACTOR = 0.75f;
   private static final boolean ACCESS_ORDER = true;
@@ -24,7 +24,7 @@ public final class LinkedHashMapCache implements ReadThroughCache {
   private final Map<UUID, Map<Column, Map<UUID, Note>>> cache;
   private final Function<UUID, Board> readThroughFunction;
 
-  public LinkedHashMapCache(final int cacheSize, final Function<UUID, Board> readThroughFunction) {
+  public LinkedHashMapLRUCache(final int cacheSize, final Function<UUID, Board> readThroughFunction) {
 
     cache = new LinkedHashMap(cacheSize + 1, LOAD_FACTOR, ACCESS_ORDER) {
 

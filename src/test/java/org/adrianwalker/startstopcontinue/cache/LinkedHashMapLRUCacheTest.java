@@ -8,7 +8,7 @@ import org.adrianwalker.startstopcontinue.model.Note;
 import org.junit.Test;
 import static org.junit.Assert.*;
 
-public final class LinkedHashMapCacheTest {
+public final class LinkedHashMapLRUCacheTest {
 
   @Test
   public void testZeroSizeReadThrough() {
@@ -16,7 +16,7 @@ public final class LinkedHashMapCacheTest {
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
 
-    ReadThroughCache cache = new LinkedHashMapCache(0, boardId -> new Board().setId(boardId)
+    Cache cache = new LinkedHashMapLRUCache(0, boardId -> new Board().setId(boardId)
       .setStarts(new ArrayList<>())
       .setStops(new ArrayList<>())
       .setContinues(new ArrayList<>()));
@@ -34,7 +34,7 @@ public final class LinkedHashMapCacheTest {
     UUID id1 = UUID.randomUUID();
     UUID id2 = UUID.randomUUID();
 
-    ReadThroughCache cache = new LinkedHashMapCache(1, boardId -> new Board().setId(boardId)
+    Cache cache = new LinkedHashMapLRUCache(1, boardId -> new Board().setId(boardId)
       .setStarts(new ArrayList<>())
       .setStops(new ArrayList<>())
       .setContinues(new ArrayList<>()));
@@ -55,7 +55,7 @@ public final class LinkedHashMapCacheTest {
 
     int cacheSize = 1;
 
-    ReadThroughCache cache = new LinkedHashMapCache(cacheSize, boardId -> new Board().setId(boardId)
+    Cache cache = new LinkedHashMapLRUCache(cacheSize, boardId -> new Board().setId(boardId)
       .setStarts(new ArrayList<>())
       .setStops(new ArrayList<>())
       .setContinues(new ArrayList<>()));
@@ -81,7 +81,7 @@ public final class LinkedHashMapCacheTest {
     Note note2 = new Note().setId(id2);
     Note note3 = new Note().setId(id3);
 
-    ReadThroughCache cache = new LinkedHashMapCache(10, boardId -> new Board().setId(boardId)
+    Cache cache = new LinkedHashMapLRUCache(10, boardId -> new Board().setId(boardId)
       .setStarts(new ArrayList<>())
       .setStops(new ArrayList<>())
       .setContinues(new ArrayList<>()));

@@ -124,8 +124,8 @@ public final class MinioDataAccess implements DataAccess {
 
   private void writeNote(final String name, final Note note) {
 
-    try ( PipedInputStream pis = new PipedInputStream();//
-        PipedOutputStream pos = new PipedOutputStream(pis)) {
+    try (PipedInputStream pis = new PipedInputStream();//
+      PipedOutputStream pos = new PipedOutputStream(pis)) {
 
       OBJECT_MAPPER.writeValue(pos, note);
       minioClient.putObject(this.bucketName, name, pis, MediaType.APPLICATION_JSON);
@@ -137,7 +137,7 @@ public final class MinioDataAccess implements DataAccess {
 
   private Note readNote(final String name) {
 
-    try ( InputStream is = minioClient.getObject(this.bucketName, name)) {
+    try (InputStream is = minioClient.getObject(this.bucketName, name)) {
 
       return OBJECT_MAPPER.readValue(is, Note.class);
 

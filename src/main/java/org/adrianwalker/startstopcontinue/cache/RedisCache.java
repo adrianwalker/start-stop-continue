@@ -20,7 +20,7 @@ import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 
-public final class RedisCache implements ReadThroughCache {
+public final class RedisCache implements Cache {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String FIELD_SEPERATOR = "/";

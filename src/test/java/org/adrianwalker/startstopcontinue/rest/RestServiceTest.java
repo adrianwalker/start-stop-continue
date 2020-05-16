@@ -20,7 +20,7 @@ import static org.mockito.ArgumentMatchers.any;
 import org.mockito.Mock;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
-import org.adrianwalker.startstopcontinue.cache.ReadThroughCache;
+import org.adrianwalker.startstopcontinue.cache.Cache;
 
 public final class RestServiceTest {
 
@@ -62,9 +62,9 @@ public final class RestServiceTest {
     service = new Service(dataAccess, nonCachingCache(boardId -> dataAccess.readBoard(boardId)), executorService, 0);
   }
 
-  public static ReadThroughCache nonCachingCache(final Function<UUID, Board> readThroughFunction) {
+  public static Cache nonCachingCache(final Function<UUID, Board> readThroughFunction) {
 
-    return new ReadThroughCache() {
+    return new Cache() {
 
       @Override
       public Board read(UUID boardId) {

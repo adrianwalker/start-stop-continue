@@ -2,7 +2,7 @@ package org.adrianwalker.startstopcontinue.model;
 
 import java.util.Date;
 
-public final class Note extends Idable<Note> {
+public final class Note extends IDable<Note> {
 
   private Date created;
   private String color;

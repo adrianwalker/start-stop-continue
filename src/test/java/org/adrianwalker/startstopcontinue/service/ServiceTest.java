@@ -22,7 +22,7 @@ import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
-import org.adrianwalker.startstopcontinue.cache.ReadThroughCache;
+import org.adrianwalker.startstopcontinue.cache.Cache;
 
 public final class ServiceTest {
 
@@ -60,9 +60,9 @@ public final class ServiceTest {
       .setContinues(continues));
   }
 
-  public static ReadThroughCache nonCachingCache(final Function<UUID, Board> readThroughFunction) {
+  public static Cache nonCachingCache(final Function<UUID, Board> readThroughFunction) {
 
-    return new ReadThroughCache() {
+    return new Cache() {
 
       @Override
       public Board read(UUID boardId) {

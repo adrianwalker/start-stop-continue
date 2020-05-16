@@ -10,7 +10,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.function.Function;
 import javax.websocket.server.ServerEndpointConfig;
-import org.adrianwalker.startstopcontinue.cache.LinkedHashMapCache;
+import org.adrianwalker.startstopcontinue.cache.LinkedHashMapLRUCache;
 import org.adrianwalker.startstopcontinue.cache.RedisCache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.dataaccess.JsonFileSystemDataAccess;
@@ -33,8 +33,8 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.websocket.jsr356.server.ServerContainer;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.glassfish.jersey.servlet.ServletContainer;
-import org.adrianwalker.startstopcontinue.cache.ReadThroughCache;
 import org.adrianwalker.startstopcontinue.model.Board;
+import org.adrianwalker.startstopcontinue.cache.Cache;
 
 public final class Launcher {
 
@@ -52,7 +52,7 @@ public final class Launcher {
     Configuration config = new Configuration();
 
     DataAccess dataAccess = DataAccessFactory.create(config);
-    ReadThroughCache cache = new CacheFactory(boardId -> dataAccess.readBoard(boardId)).create(config);
+    Cache cache = new CacheFactory(boardId -> dataAccess.readBoard(boardId)).create(config);
     EventPubSub eventPubSub = EventPubSubFactory.create(config);
     ExecutorService executorService = Executors.newFixedThreadPool(config.getDataThreads());
     Service service = new Service(dataAccess, cache, executorService, config.getDataSize());
@@ -131,9 +131,9 @@ public final class Launcher {
       this.readThroughFunction = readThroughFunction;
     }
 
-    public ReadThroughCache create(final Configuration config) {
+    public Cache create(final Configuration config) {
 
-      ReadThroughCache cache;
+      Cache cache;
 
       if (!config.getCacheHostname().isEmpty() && config.getCachePort() > 0) {
 
@@ -141,7 +141,7 @@ public final class Launcher {
 
       } else {
 
-        cache = new LinkedHashMapCache(config.getCacheSize(), readThroughFunction);
+        cache = new LinkedHashMapLRUCache(config.getCacheSize(), readThroughFunction);
       }
 
       return cache;

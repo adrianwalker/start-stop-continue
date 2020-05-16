@@ -4,7 +4,7 @@ import java.io.Serializable;
 import java.util.Objects;
 import java.util.UUID;
 
-public abstract class Idable<T extends Idable> implements Serializable {
+public abstract class IDable<T extends IDable> implements Serializable {
 
   private UUID id;
 
@@ -38,7 +38,7 @@ public abstract class Idable<T extends Idable> implements Serializable {
       return false;
     }
 
-    Idable other = (Idable) obj;
+    IDable other = (IDable) obj;
     return Objects.equals(this.id, other.id);
   }
 }
