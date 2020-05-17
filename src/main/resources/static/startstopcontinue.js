@@ -25,7 +25,9 @@ $(document).ready(function () {
     "CONTINUE": $("#continue-list")
   };
 
-  var webSocket = createWebSocket(boardId);
+  var webSocket = createWebSocket(function () {
+    loadBoard(boardId);
+  });
 
   startWebSocketPing(60 * 1000);
 
@@ -159,13 +161,13 @@ $(document).ready(function () {
     });
   }
 
-  function createWebSocket(boardId) {
+  function createWebSocket(callback) {
 
     var url = "ws://" + window.location.host + window.location.pathname + "events/" + boardId;
     var webSocket = new WebSocket(url);
 
     webSocket.onopen = function (event) {
-      loadBoard(boardId);
+      callback();
     };
 
     webSocket.onmessage = function (event) {
@@ -187,21 +189,33 @@ $(document).ready(function () {
 
   function sendEvent(boardId, column, note) {
 
-    if (!isWebSocketOpen(webSocket)) {
-      webSocket = createWebSocket(boardId);
-    }
+    var send = function () {
+      webSocket.send(JSON.stringify({boardId: boardId, column: column, note: note}));
+    };
 
-    webSocket.send(JSON.stringify({boardId: boardId, column: column, note: note}));
+    if (isWebSocketOpen(webSocket)) {
+      send();
+    } else {
+      webSocket = createWebSocket(function () {
+        send();
+        loadBoard(boardId);
+      });
+    }
   }
 
   function sendPing() {
 
-    if (!isWebSocketOpen(webSocket)) {
-      webSocket = createWebSocket(boardId);
-    }
+    var send = function () {
+      webSocket.send("ping");
+    };
 
     if (isWebSocketOpen(webSocket)) {
-      webSocket.send("ping");
+      send();
+    } else {
+      webSocket = createWebSocket(function () {
+        send();
+        loadBoard(boardId);
+      });
     }
   }
 

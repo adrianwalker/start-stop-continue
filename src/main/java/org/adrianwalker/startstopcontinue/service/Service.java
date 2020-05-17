@@ -50,8 +50,10 @@ public final class Service {
       .setCreated(new Date())
       .setText(truncateNoteText(note.getText()));
 
-    executor.execute(() -> dataAccess.createNote(boardId, column, note));
-    cache.write(boardId, column, note);
+    executor.execute(() -> {
+      dataAccess.createNote(boardId, column, note);
+      cache.write(boardId, column, note);
+    });
   }
 
   public final void updateNote(final UUID boardId, final Column column, final Note data) {
@@ -59,14 +61,18 @@ public final class Service {
     Note note = cache.read(boardId, column, data.getId())
       .setText(truncateNoteText(data.getText()));
 
-    executor.execute(() -> dataAccess.updateNote(boardId, column, note));
-    cache.write(boardId, column, note);
+    executor.execute(() -> {
+      dataAccess.updateNote(boardId, column, note);
+      cache.write(boardId, column, note);
+    });
   }
 
   public final void deleteNote(final UUID boardId, final Column column, final UUID noteId) {
 
-    executor.execute(() -> dataAccess.deleteNote(boardId, column, noteId));
-    cache.delete(boardId, column, noteId);
+    executor.execute(() -> {
+      dataAccess.deleteNote(boardId, column, noteId);
+      cache.delete(boardId, column, noteId);
+    });
   }
 
   private String truncateNoteText(final String text) {
