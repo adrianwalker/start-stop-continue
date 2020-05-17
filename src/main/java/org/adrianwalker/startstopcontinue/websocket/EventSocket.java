@@ -1,6 +1,6 @@
 package org.adrianwalker.startstopcontinue.websocket;
 
-import org.adrianwalker.startstopcontinue.cache.pubsub.EventPubSub;
+import org.adrianwalker.startstopcontinue.pubsub.EventPubSub;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -14,7 +14,7 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
-import org.adrianwalker.startstopcontinue.cache.pubsub.Event;
+import org.adrianwalker.startstopcontinue.pubsub.Event;
 
 @ServerEndpoint("")
 public final class EventSocket {

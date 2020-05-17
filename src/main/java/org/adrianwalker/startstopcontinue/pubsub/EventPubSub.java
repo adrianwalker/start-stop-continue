@@ -1,4 +1,4 @@
-package org.adrianwalker.startstopcontinue.cache.pubsub;
+package org.adrianwalker.startstopcontinue.pubsub;
 
 import java.util.UUID;
 import java.util.function.BiConsumer;

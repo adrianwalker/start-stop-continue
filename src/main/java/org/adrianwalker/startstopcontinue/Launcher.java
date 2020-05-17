@@ -1,28 +1,18 @@
 package org.adrianwalker.startstopcontinue;
 
-import io.lettuce.core.RedisClient;
-import io.lettuce.core.RedisURI;
-import io.lettuce.core.api.StatefulRedisConnection;
-import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
-import io.minio.MinioClient;
-import java.util.UUID;
+import org.adrianwalker.startstopcontinue.pubsub.EventPubSubFactory;
+import org.adrianwalker.startstopcontinue.dataaccess.DataAccessFactory;
+import org.adrianwalker.startstopcontinue.cache.CacheFactory;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 import javax.websocket.server.ServerEndpointConfig;
-import org.adrianwalker.startstopcontinue.cache.LinkedHashMapLRUCache;
-import org.adrianwalker.startstopcontinue.cache.RedisCache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
-import org.adrianwalker.startstopcontinue.dataaccess.JsonFileSystemDataAccess;
-import org.adrianwalker.startstopcontinue.dataaccess.MinioDataAccess;
 import org.adrianwalker.startstopcontinue.rest.RestServlet;
 import org.adrianwalker.startstopcontinue.service.Service;
 import org.adrianwalker.startstopcontinue.web.WebServlet;
-import org.adrianwalker.startstopcontinue.cache.pubsub.EventPubSub;
-import org.adrianwalker.startstopcontinue.cache.pubsub.ArrayListEventPubSub;
+import org.adrianwalker.startstopcontinue.pubsub.EventPubSub;
 import org.adrianwalker.startstopcontinue.websocket.EventSocket;
 import org.adrianwalker.startstopcontinue.websocket.EventSocketConfigurator;
-import org.adrianwalker.startstopcontinue.cache.pubsub.RedisEventPubSub;
 import org.eclipse.jetty.server.Connector;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.ServerConnector;
@@ -33,8 +23,8 @@ import org.eclipse.jetty.util.resource.Resource;
 import org.eclipse.jetty.websocket.jsr356.server.ServerContainer;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.glassfish.jersey.servlet.ServletContainer;
-import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.cache.Cache;
+import org.adrianwalker.startstopcontinue.configuration.Configuration;
 
 public final class Launcher {
 
@@ -51,12 +41,11 @@ public final class Launcher {
 
     Configuration config = new Configuration();
 
-    DataAccess dataAccess = DataAccessFactory.create(config);
-    Cache cache = new CacheFactory(boardId -> dataAccess.readBoard(boardId)).create(config);
-    EventPubSub eventPubSub = EventPubSubFactory.create(config);
-    ExecutorService executorService = Executors.newFixedThreadPool(config.getDataThreads());
-    Service service = new Service(dataAccess, cache, executorService, config.getDataSize());
-    Server server = createServer(config.getHttpPort());
+    DataAccess dataAccess = createDataAccess(config);
+    Cache cache = createCache(config, dataAccess);
+    EventPubSub eventPubSub = createPubSub(config);
+    Service service = createService(config, dataAccess, cache);
+    Server server = createServer(config);
     ServletContextHandler context = createContext(CONTEXT_PATH, BASE_RESOURCE, WELCOME_FILES);
 
     addRestServlet(context, service);
@@ -68,11 +57,41 @@ public final class Launcher {
     server.start();
   }
 
-  private static Server createServer(final int port) {
+  private static EventPubSub createPubSub(final Configuration config) {
+
+    return new EventPubSubFactory(config.getPubSubConfiguration()).create();
+  }
+
+  private static Cache createCache(final Configuration config, final DataAccess dataAccess) {
+
+    return new CacheFactory(
+      config.getCacheConfiguration(),
+      boardId -> dataAccess.readBoard(boardId)).create();
+  }
+
+  private static DataAccess createDataAccess(final Configuration config) {
+
+    return new DataAccessFactory(config.getDataConfiguration()).create();
+  }
+
+  private static Service createService(
+    final Configuration config, final DataAccess dataAccess, final Cache cache) {
+
+    ExecutorService executorService = Executors.newFixedThreadPool(
+      config.getDataConfiguration().getDataThreads());
+
+    return new Service(
+      dataAccess,
+      cache,
+      executorService,
+      config.getDataConfiguration().getDataSize());
+  }
+
+  private static Server createServer(final Configuration config) {
 
     Server server = new Server();
     ServerConnector connector = new ServerConnector(server);
-    connector.setPort(port);
+    connector.setPort(config.getHttpConfiguration().getHttpPort());
     server.setConnectors(new Connector[]{connector});
 
     return server;
@@ -120,110 +139,5 @@ public final class Launcher {
         new ServletContainer(
           new RestServlet(service))),
       REST_SERVLET_PATH);
-  }
-
-  private static final class CacheFactory {
-
-    private final Function<UUID, Board> readThroughFunction;
-
-    public CacheFactory(final Function<UUID, Board> readThroughFunction) {
-
-      this.readThroughFunction = readThroughFunction;
-    }
-
-    public Cache create(final Configuration config) {
-
-      Cache cache;
-
-      if (!config.getCacheHostname().isEmpty() && config.getCachePort() > 0) {
-
-        cache = new RedisCache(createRedisConnection(config), readThroughFunction);
-
-      } else {
-
-        cache = new LinkedHashMapLRUCache(config.getCacheSize(), readThroughFunction);
-      }
-
-      return cache;
-    }
-
-    private static StatefulRedisConnection<String, String> createRedisConnection(final Configuration config) {
-
-      return RedisClient.create(RedisURI.Builder
-        .redis(config.getCacheHostname())
-        .withPort(config.getCachePort())
-        .withPassword(config.getCachePassword())
-        .build())
-        .connect();
-    }
-  }
-
-  private static final class DataAccessFactory {
-
-    public static DataAccess create(final Configuration config) {
-
-      DataAccess dataAccess;
-
-      if (!config.getDataEndpoint().isEmpty() && config.getDataPort() > 0) {
-
-        dataAccess = new MinioDataAccess(createMinioClient(config), config.getDataBucket());
-
-      } else {
-
-        dataAccess = new JsonFileSystemDataAccess(config.getDataPath());
-      }
-
-      return dataAccess;
-    }
-
-    private static MinioClient createMinioClient(final Configuration config) throws RuntimeException {
-
-      MinioClient minioClient;
-      try {
-        minioClient = new MinioClient(
-          config.getDataEndpoint(), config.getDataPort(),
-          config.getDataAccessKey(), config.getDataSecretKey(),
-          config.getDataRegion(), config.getDataSecure());
-
-      } catch (final Exception e) {
-        throw new RuntimeException(e);
-      }
-
-      return minioClient;
-    }
-  }
-
-  private static final class EventPubSubFactory {
-
-    public static EventPubSub create(final Configuration config) {
-
-      EventPubSub eventPubSub;
-
-      if (!config.getPubSubHostname().isEmpty() && config.getPubSubPort() > 0) {
-
-        eventPubSub = new RedisEventPubSub(
-          createRedisPubSubconnection(config),
-          createRedisPubSubconnection(config));
-
-      } else {
-
-        eventPubSub = new ArrayListEventPubSub();
-      }
-
-      eventPubSub.addConsumer(EventSocket.BROADCAST_CONSUMER);
-
-      return eventPubSub;
-    }
-
-    private static StatefulRedisPubSubConnection<String, String> createRedisPubSubconnection(
-      final Configuration config) {
-
-      return RedisClient.create(RedisURI.Builder
-        .redis(config.getPubSubHostname())
-        .withPort(config.getPubSubPort())
-        .withPassword(config.getPubSubPassword())
-        .build())
-        .connectPubSub();
-    }
   }
 }

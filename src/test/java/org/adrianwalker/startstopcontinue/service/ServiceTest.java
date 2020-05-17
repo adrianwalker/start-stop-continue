@@ -88,8 +88,8 @@ public final class ServiceTest {
   public void testCreateBoard() {
 
     Service service = new Service(
-      dataAccess, 
-      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      dataAccess,
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)),
       executorService, 0);
     Board board = service.createBoard();
     assertNotNull(board);
@@ -103,8 +103,8 @@ public final class ServiceTest {
   public void testReadBoard() {
 
     Service service = new Service(
-      dataAccess, 
-      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      dataAccess,
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)),
       executorService, 0);
     Board board = service.readBoard(BOARD_ID);
     assertNotNull(board);
@@ -117,10 +117,21 @@ public final class ServiceTest {
   @Test
   public void testCreateNote() throws InterruptedException {
 
+    testCreateNote(0);
+  }
+
+  @Test
+  public void testCreateTruncatedNote() throws InterruptedException {
+
+    testCreateNote(3);
+  }
+
+  private void testCreateNote(final int maxNoteLength) throws InterruptedException {
+
     Service service = new Service(
-      dataAccess, 
-      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
-      executorService, 0);
+      dataAccess,
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)),
+      executorService, maxNoteLength);
     service.createNote(BOARD_ID, Column.START, new Note().setColor("#ffffff").setText("Start"));
     service.createNote(BOARD_ID, Column.STOP, new Note().setColor("#ffffff").setText("Stop"));
     service.createNote(BOARD_ID, Column.CONTINUE, new Note().setColor("#ffffff").setText("Continue"));
@@ -135,25 +146,39 @@ public final class ServiceTest {
     assertEquals(BOARD_ID, uuidCaptor.getAllValues().get(0));
     assertEquals(Column.START, columnCaptor.getAllValues().get(0));
     assertNotNull(noteCaptor.getAllValues().get(0).getId());
-    assertEquals("Start", noteCaptor.getAllValues().get(0).getText());
+    if (maxNoteLength > 0) {
+      assertEquals("Start".substring(0, maxNoteLength), noteCaptor.getAllValues().get(0).getText());
+    } else {
+      assertEquals("Start", noteCaptor.getAllValues().get(0).getText());
+    }
 
     assertEquals(BOARD_ID, uuidCaptor.getAllValues().get(1));
     assertEquals(Column.STOP, columnCaptor.getAllValues().get(1));
     assertNotNull(noteCaptor.getAllValues().get(1).getId());
-    assertEquals("Stop", noteCaptor.getAllValues().get(1).getText());
+    assertNotNull(noteCaptor.getAllValues().get(0).getId());
+    if (maxNoteLength > 0) {
+      assertEquals("Stop".substring(0, maxNoteLength), noteCaptor.getAllValues().get(1).getText());
+    } else {
+      assertEquals("Stop", noteCaptor.getAllValues().get(1).getText());
+    }
 
     assertEquals(BOARD_ID, uuidCaptor.getAllValues().get(2));
     assertEquals(Column.CONTINUE, columnCaptor.getAllValues().get(2));
     assertNotNull(noteCaptor.getAllValues().get(2).getId());
-    assertEquals("Continue", noteCaptor.getAllValues().get(2).getText());
+    assertNotNull(noteCaptor.getAllValues().get(0).getId());
+    if (maxNoteLength > 0) {
+      assertEquals("Continue".substring(0, maxNoteLength), noteCaptor.getAllValues().get(2).getText());
+    } else {
+      assertEquals("Continue", noteCaptor.getAllValues().get(2).getText());
+    }
   }
 
   @Test
   public void testUpdateNote() throws InterruptedException {
 
     Service service = new Service(
-      dataAccess, 
-      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      dataAccess,
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)),
       executorService, 0);
     service.updateNote(BOARD_ID, Column.START, new Note().setId(NOTE_ID_1).setText("Start"));
     service.updateNote(BOARD_ID, Column.STOP, new Note().setId(NOTE_ID_2).setText("Stop"));
@@ -186,8 +211,8 @@ public final class ServiceTest {
   public void testDeleteNote() throws InterruptedException {
 
     Service service = new Service(
-      dataAccess, 
-      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      dataAccess,
+      nonCachingCache(boardId -> dataAccess.readBoard(boardId)),
       executorService, 0);
     service.deleteNote(BOARD_ID, Column.START, NOTE_ID_1);
     service.deleteNote(BOARD_ID, Column.STOP, NOTE_ID_2);
@@ -211,22 +236,5 @@ public final class ServiceTest {
     assertEquals(BOARD_ID, uuidCaptor1.getAllValues().get(2));
     assertEquals(Column.CONTINUE, columnCaptor.getAllValues().get(2));
     assertEquals(NOTE_ID_3, uuidCaptor2.getAllValues().get(2));
-  }
-
-  @Test
-  public void testTruncateNote() throws InterruptedException {
-
-    Service service = new Service(
-      dataAccess, 
-      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
-      executorService, 0);
-    service.createNote(BOARD_ID, Column.START, new Note().setText("abc"));
-
-    executorService.awaitTermination(10, TimeUnit.SECONDS);
-
-    ArgumentCaptor<Note> noteCaptor = ArgumentCaptor.forClass(Note.class);
-    verify(dataAccess).createNote(any(UUID.class), any(Column.class), noteCaptor.capture());
-
-    assertNotNull("a", noteCaptor.getValue().getText());
   }
 }

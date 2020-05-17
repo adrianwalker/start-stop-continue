@@ -1,19 +1,19 @@
-package org.adrianwalker.startstopcontinue.cache.pubsub;
+package org.adrianwalker.startstopcontinue.pubsub;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.BiConsumer;
 
-public final class ArrayListEventPubSub implements EventPubSub {
+public final class HashSetEventPubSub implements EventPubSub {
 
-  private final List<UUID> subscriptions;
-  private final List<BiConsumer<UUID, Event>> consumers;
+  private final Set<UUID> subscriptions;
+  private final Set<BiConsumer<UUID, Event>> consumers;
 
-  public ArrayListEventPubSub() {
+  public HashSetEventPubSub() {
 
-    subscriptions = new ArrayList<>();
-    consumers = new ArrayList<>();
+    subscriptions = new HashSet<>();
+    consumers = new HashSet<>();
   }
 
   @Override

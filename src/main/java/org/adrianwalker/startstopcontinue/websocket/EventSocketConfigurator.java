@@ -1,6 +1,6 @@
 package org.adrianwalker.startstopcontinue.websocket;
 
-import org.adrianwalker.startstopcontinue.cache.pubsub.EventPubSub;
+import org.adrianwalker.startstopcontinue.pubsub.EventPubSub;
 import javax.websocket.server.ServerEndpointConfig;
 
 public final class EventSocketConfigurator extends ServerEndpointConfig.Configurator {

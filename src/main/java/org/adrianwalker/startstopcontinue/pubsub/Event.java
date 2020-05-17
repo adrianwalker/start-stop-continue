@@ -1,4 +1,4 @@
-package org.adrianwalker.startstopcontinue.cache.pubsub;
+package org.adrianwalker.startstopcontinue.pubsub;
 
 public final class Event {
 
