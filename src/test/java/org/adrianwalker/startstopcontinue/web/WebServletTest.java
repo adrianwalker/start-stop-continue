@@ -4,9 +4,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import org.adrianwalker.startstopcontinue.cache.NonCachingCache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.service.Service;
-import static org.adrianwalker.startstopcontinue.service.ServiceTest.nonCachingCache;
 import org.junit.Test;
 import static org.junit.Assert.*;
 import org.junit.Before;
@@ -41,8 +41,8 @@ public final class WebServletTest {
   public void testDoGetNewBoard() throws Exception {
 
     Service service = new Service(
-      dataAccess, 
-      nonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      dataAccess,
+      new NonCachingCache(boardId -> dataAccess.readBoard(boardId)),
       executorService, 0);
     WebServlet servlet = new WebServlet(service);
     servlet.doGet(request, response);

@@ -5,7 +5,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.function.Function;
 import javax.ws.rs.core.Response;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
@@ -20,7 +19,7 @@ import static org.mockito.ArgumentMatchers.any;
 import org.mockito.Mock;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
-import org.adrianwalker.startstopcontinue.cache.Cache;
+import org.adrianwalker.startstopcontinue.cache.NonCachingCache;
 
 public final class RestServiceTest {
 
@@ -59,31 +58,10 @@ public final class RestServiceTest {
       .setStops(stops)
       .setContinues(continues));
 
-    service = new Service(dataAccess, nonCachingCache(boardId -> dataAccess.readBoard(boardId)), executorService, 0);
-  }
-
-  public static Cache nonCachingCache(final Function<UUID, Board> readThroughFunction) {
-
-    return new Cache() {
-
-      @Override
-      public Board read(UUID boardId) {
-        return readThroughFunction.apply(boardId);
-      }
-
-      @Override
-      public Note read(UUID boardId, Column column, UUID noteId) {
-        return new Note().setId(noteId);
-      }
-
-      @Override
-      public void write(UUID boardId, Column column, Note note) {
-      }
-
-      @Override
-      public void delete(UUID boardId, Column column, UUID noteId) {
-      }
-    };
+    service = new Service(
+      dataAccess, 
+      new NonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      executorService, 0);
   }
 
   @Test
