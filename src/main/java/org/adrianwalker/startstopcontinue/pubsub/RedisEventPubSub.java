@@ -26,13 +26,13 @@ public final class RedisEventPubSub implements EventPubSub {
   @Override
   public void subscribe(final UUID boardId) {
 
-    this.subscribeConnection.async().subscribe(boardId.toString());
+    subscribeConnection.async().subscribe(boardId.toString());
   }
 
   @Override
   public void unsubscribe(final UUID boardId) {
 
-    this.subscribeConnection.async().unsubscribe(boardId.toString());
+    subscribeConnection.async().unsubscribe(boardId.toString());
   }
 
   @Override

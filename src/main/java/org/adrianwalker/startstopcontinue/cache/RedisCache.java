@@ -31,13 +31,16 @@ public final class RedisCache implements Cache {
     entry -> List.of(readNote(entry.getValue())),
     (n1, n2) -> combineNotes(n1, n2));
 
+  private final long expirySeconds;
   private final StatefulRedisConnection<String, String> redisConnection;
   private final Function<UUID, Board> readThroughFunction;
 
   public RedisCache(
+    final long expirySeconds,
     final StatefulRedisConnection<String, String> redisConnection,
     final Function<UUID, Board> readThroughFunction) {
 
+    this.expirySeconds = expirySeconds;
     this.redisConnection = redisConnection;
     this.readThroughFunction = readThroughFunction;
   }
@@ -78,6 +81,13 @@ public final class RedisCache implements Cache {
     }
 
     hset(boardId.toString(), noteField(column, note.getId()), writeNote(note));
+    expire(boardId.toString(), expirySeconds);
+  }
+
+  @Override
+  public void delete(final UUID boardId) {
+
+    del(boardId.toString());
   }
 
   @Override
@@ -122,6 +132,16 @@ public final class RedisCache implements Cache {
   private boolean exists(final String... keys) {
 
     return redisConnection.sync().exists(keys) > 0;
+  }
+
+  private void del(final String... keys) {
+
+    redisConnection.async().del(keys);
+  }
+
+  private void expire(final String key, final long seconds) {
+
+    redisConnection.async().expire(key, seconds);
   }
 
   private Map<String, String> hgetAll(final String key) {

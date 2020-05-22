@@ -7,11 +7,13 @@ import org.adrianwalker.startstopcontinue.model.Note;
 
 public interface Cache {
 
-  Board read(final UUID boardId);
+  Board read(UUID boardId);
 
-  Note read(final UUID boardId, final Column column, final UUID noteId);
+  Note read(UUID boardId, Column column, UUID noteId);
 
-  void write(final UUID boardId, final Column column, final Note note);
+  void write(UUID boardId, Column column, Note note);
 
-  void delete(final UUID boardId, final Column column, final UUID noteId);
+  void delete(UUID boardId);
+  
+  void delete(UUID boardId, Column column, UUID noteId);
 }

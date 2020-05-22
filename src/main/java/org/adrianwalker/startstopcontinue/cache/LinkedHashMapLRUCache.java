@@ -76,6 +76,12 @@ public final class LinkedHashMapLRUCache implements Cache {
   }
 
   @Override
+  public void delete(final UUID boardId) {
+
+    cache.remove(boardId);
+  }
+
+  @Override
   public void delete(final UUID boardId, final Column column, final UUID noteId) {
 
     if (!cache.containsKey(boardId)) {

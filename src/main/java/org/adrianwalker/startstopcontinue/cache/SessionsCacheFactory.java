@@ -4,39 +4,34 @@ import io.lettuce.core.RedisClient;
 import io.lettuce.core.RedisURI;
 import io.lettuce.core.api.StatefulRedisConnection;
 import java.util.UUID;
-import java.util.function.Function;
-import org.adrianwalker.startstopcontinue.model.Board;
+import java.util.function.Consumer;
 import org.adrianwalker.startstopcontinue.configuration.CacheConfiguration;
 
-public final class CacheFactory {
+public final class SessionsCacheFactory {
 
   private final CacheConfiguration config;
-  private final Function<UUID, Board> readThroughFunction;
+  private final Consumer<UUID> deleteConsumer;
 
-  public CacheFactory(
-    final CacheConfiguration config,
-    final Function<UUID, Board> readThroughFunction) {
+  public SessionsCacheFactory(final CacheConfiguration config, final Consumer<UUID> deleteConsumer) {
 
     this.config = config;
-    this.readThroughFunction = readThroughFunction;
+    this.deleteConsumer = deleteConsumer;
   }
 
-  public Cache create() {
+  public SessionsCache create() {
 
-    Cache cache;
+    SessionsCache cache;
 
     if (!config.getCacheHostname().isEmpty() && config.getCachePort() > 0) {
 
-      cache = new RedisCache(
-        config.getCacheExpirySeconds(), 
-        createRedisConnection(config), 
-        readThroughFunction);
+      cache = new RedisSessionsCache(
+        config.getCacheExpirySeconds(),
+        createRedisConnection(config),
+        deleteConsumer);
 
     } else {
 
-      cache = new LinkedHashMapLRUCache(
-        config.getCacheSize(), 
-        readThroughFunction);
+      cache = new HashMapSessionsCache(deleteConsumer);
     }
 
     return cache;

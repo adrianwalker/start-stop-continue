@@ -9,6 +9,7 @@ public final class CacheConfiguration {
   private static final String CACHE_PORT = "STARTSTOPCONTINUE_CACHE_PORT";
   private static final String CACHE_PASSWORD = "STARTSTOPCONTINUE_CACHE_PASSWORD";
   private static final String CACHE_SIZE = "STARTSTOPCONTINUE_CACHE_SIZE";
+  private static final String CACHE_EXPIRY = "STARTSTOPCONTINUE_CACHE_EXPIRY";
 
   /*
   Configuration defaults
@@ -17,7 +18,8 @@ public final class CacheConfiguration {
   public static final String DEFAULT_CACHE_PORT = "0";
   public static final String DEFAULT_CACHE_PASSWORD = "";
   public static final String DEFAULT_CACHE_SIZE = "32";
-  
+  public static final String DEFAULT_CACHE_EXPIRY = "86400";
+
   public String getCacheHostname() {
 
     return System.getenv().getOrDefault(CACHE_HOSTNAME, DEFAULT_CACHE_HOSTNAME);
@@ -36,5 +38,10 @@ public final class CacheConfiguration {
   public int getCacheSize() {
 
     return Integer.valueOf(System.getenv().getOrDefault(CACHE_SIZE, DEFAULT_CACHE_SIZE));
+  }
+
+  public long getCacheExpirySeconds() {
+
+    return Long.valueOf(System.getenv().getOrDefault(CACHE_EXPIRY, DEFAULT_CACHE_EXPIRY));
   }
 }
