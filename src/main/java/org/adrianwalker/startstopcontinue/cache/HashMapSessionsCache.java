@@ -4,8 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class HashMapSessionsCache implements SessionsCache {
+
+  private final static Logger LOGGER = LoggerFactory.getLogger(HashMapSessionsCache.class);
 
   private final Map<UUID, Long> cache;
   private final Consumer<UUID> deleteConsumer;
@@ -19,7 +23,11 @@ public final class HashMapSessionsCache implements SessionsCache {
   @Override
   public long incrementSessions(final UUID boardId) {
 
-    return cache.compute(boardId, (k, v) -> (v == null) ? 1 : v + 1);
+    long sessions = cache.compute(boardId, (k, v) -> (v == null) ? 1 : v + 1);
+
+    LOGGER.info("boardId = {}, sessions = {}", boardId, sessions);
+
+    return sessions;
   }
 
   @Override
@@ -31,7 +39,9 @@ public final class HashMapSessionsCache implements SessionsCache {
       cache.remove(boardId);
       deleteConsumer.accept(boardId);
     }
-    
+
+    LOGGER.info("boardId = {}, sessions = {}", boardId, sessions);
+
     return sessions;
   }
 }

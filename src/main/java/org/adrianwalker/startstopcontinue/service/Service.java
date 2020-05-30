@@ -5,13 +5,18 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
+import static org.adrianwalker.startstopcontinue.Monitoring.logMemoryUsage;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 import org.adrianwalker.startstopcontinue.cache.Cache;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class Service {
+
+  private final static Logger LOGGER = LoggerFactory.getLogger(Service.class);
 
   private final DataAccess dataAccess;
   private final Cache cache;
@@ -36,12 +41,18 @@ public final class Service {
 
     dataAccess.createBoard(board);
 
+    logMemoryUsage();
+
     return board;
   }
 
   public final Board readBoard(final UUID boardId) {
 
-    return cache.read(boardId);
+    Board board = cache.read(boardId);
+
+    logMemoryUsage();
+
+    return board;
   }
 
   public final void createNote(final UUID boardId, final Column column, final Note note) {
@@ -54,6 +65,8 @@ public final class Service {
       dataAccess.createNote(boardId, column, note);
       cache.write(boardId, column, note);
     });
+
+    logMemoryUsage();
   }
 
   public final void updateNote(final UUID boardId, final Column column, final Note data) {
@@ -65,6 +78,8 @@ public final class Service {
       dataAccess.updateNote(boardId, column, note);
       cache.write(boardId, column, note);
     });
+
+    logMemoryUsage();
   }
 
   public final void deleteNote(final UUID boardId, final Column column, final UUID noteId) {
@@ -73,6 +88,8 @@ public final class Service {
       dataAccess.deleteNote(boardId, column, noteId);
       cache.delete(boardId, column, noteId);
     });
+
+    logMemoryUsage();
   }
 
   private String truncateNoteText(final String text) {

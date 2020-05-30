@@ -13,8 +13,11 @@ import static java.util.stream.Collectors.toMap;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
+import org.slf4j.LoggerFactory;
 
 public final class LinkedHashMapLRUCache implements Cache {
+
+  private final static org.slf4j.Logger LOGGER = LoggerFactory.getLogger(LinkedHashMapLRUCache.class);
 
   private static final float LOAD_FACTOR = 0.75f;
   private static final boolean ACCESS_ORDER = true;
@@ -42,7 +45,8 @@ public final class LinkedHashMapLRUCache implements Cache {
 
     Board board;
 
-    if (cache.containsKey(boardId)) {
+    boolean cacheHit = cache.containsKey(boardId);
+    if (cacheHit) {
 
       board = fromCache(boardId);
 
@@ -51,6 +55,11 @@ public final class LinkedHashMapLRUCache implements Cache {
       board = readThroughFunction.apply(boardId);
       toCache(boardId, board);
     }
+
+    LOGGER.info("boardId = {}, cacheHit = {}", boardId, cacheHit);
+    
+    int cacheSize = cache.size();
+    LOGGER.info("cacheSize = {}", cacheSize);
 
     return board;
   }
@@ -73,12 +82,18 @@ public final class LinkedHashMapLRUCache implements Cache {
     }
 
     cache.get(boardId).get(column).put(note.getId(), note);
+
+    int cacheSize = cache.size();
+    LOGGER.info("cacheSize = {}", cacheSize);
   }
 
   @Override
   public void delete(final UUID boardId) {
 
     cache.remove(boardId);
+
+    int cacheSize = cache.size();
+    LOGGER.info("cacheSize = {}", cacheSize);
   }
 
   @Override
@@ -96,12 +111,12 @@ public final class LinkedHashMapLRUCache implements Cache {
     Map<Column, Map<UUID, Note>> columns = cache.get(boardId);
 
     return new Board().setId(boardId)
-      .setStarts(columns.get(Column.START).values().stream()
-        .sorted(NOTE_COMPARATOR).collect(toList()))
-      .setStops(columns.get(Column.STOP).values().stream()
-        .sorted(NOTE_COMPARATOR).collect(toList()))
-      .setContinues(columns.get(Column.CONTINUE).values().stream()
-        .sorted(NOTE_COMPARATOR).collect(toList()));
+            .setStarts(columns.get(Column.START).values().stream()
+                    .sorted(NOTE_COMPARATOR).collect(toList()))
+            .setStops(columns.get(Column.STOP).values().stream()
+                    .sorted(NOTE_COMPARATOR).collect(toList()))
+            .setContinues(columns.get(Column.CONTINUE).values().stream()
+                    .sorted(NOTE_COMPARATOR).collect(toList()));
   }
 
   private void toCache(final UUID boardId, final Board board) {
@@ -109,12 +124,12 @@ public final class LinkedHashMapLRUCache implements Cache {
     Map<Column, Map<UUID, Note>> columns = cache.computeIfAbsent(boardId, m -> new EnumMap<>(Column.class));
 
     columns.computeIfAbsent(Column.START, m -> new HashMap<>())
-      .putAll(board.getStarts().stream().collect(NOTE_COLLECTOR));
+            .putAll(board.getStarts().stream().collect(NOTE_COLLECTOR));
 
     columns.computeIfAbsent(Column.STOP, m -> new HashMap<>())
-      .putAll(board.getStops().stream().collect(NOTE_COLLECTOR));
+            .putAll(board.getStops().stream().collect(NOTE_COLLECTOR));
 
     columns.computeIfAbsent(Column.CONTINUE, m -> new HashMap<>())
-      .putAll(board.getContinues().stream().collect(NOTE_COLLECTOR));
+            .putAll(board.getContinues().stream().collect(NOTE_COLLECTOR));
   }
 }

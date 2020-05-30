@@ -27,7 +27,7 @@ public class RedisSessionsCache implements SessionsCache {
   public long incrementSessions(final UUID boardId) {
 
     long sessions = incrby(key(boardId), 1);
-    expire(boardId.toString(), sessions);
+    expire(boardId.toString(), expirySeconds);
 
     return sessions;
   }
@@ -36,7 +36,7 @@ public class RedisSessionsCache implements SessionsCache {
   public long decrementSessions(final UUID boardId) {
 
     long sessions = incrby(key(boardId), -1);
-    expire(boardId.toString(), sessions);
+    expire(boardId.toString(), expirySeconds);
 
     if (sessions == 0) {
       del(key(boardId));
