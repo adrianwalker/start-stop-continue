@@ -1,7 +1,6 @@
 package org.adrianwalker.startstopcontinue.service;
 
 import static java.lang.Math.min;
-import java.util.ArrayList;
 import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
@@ -31,18 +30,14 @@ public final class Service {
     this.maxNoteLength = maxNoteLength;
   }
 
-  public final Board createBoard() {
+  public final UUID createBoard() {
 
     UUID boardId = UUID.randomUUID();
     dataAccess.createBoard(boardId);
 
     logMemoryUsage();
 
-    return new Board()
-      .setId(boardId)
-      .setStarts(new ArrayList<>())
-      .setStops(new ArrayList<>())
-      .setContinues(new ArrayList<>());
+    return boardId;
   }
 
   public final Board readBoard(final UUID boardId) {

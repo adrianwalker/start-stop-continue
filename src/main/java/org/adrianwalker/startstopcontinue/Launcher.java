@@ -40,7 +40,8 @@ public final class Launcher {
   private static final String[] WELCOME_FILES = {"index.html"};
   private static final String BASE_RESOURCE = "static/";
   private static final int IDLE_TIMEOUT = 30 * 60 * 1000;
-  private static final int COMPRESSION_LEVEL = 9;
+  private static final int COMPRESSION_LEVEL = 3;
+  private static final int TEMPLATE_CACHE_SIZE = 32;
 
   public static void main(final String[] args) throws Exception {
 
@@ -150,7 +151,7 @@ public final class Launcher {
   private static void addWebServlet(final ServletContextHandler context, final Service service) {
 
     context.addServlet(
-      new ServletHolder(new WebServlet(service)),
+      new ServletHolder(new WebServlet(service, TEMPLATE_CACHE_SIZE)),
       WEB_SERVLET_PATH);
   }
 

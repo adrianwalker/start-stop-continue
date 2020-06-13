@@ -1,5 +1,7 @@
 package org.adrianwalker.startstopcontinue.rest;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -15,10 +17,16 @@ import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.ID;
 import org.adrianwalker.startstopcontinue.model.Note;
 import org.adrianwalker.startstopcontinue.service.Service;
-import org.apache.commons.lang.StringEscapeUtils;
 
 @Path("")
 public class RestService {
+
+  private static final Map<String, String> HTML_ESCAPE = new HashMap<>();
+
+  static {
+    HTML_ESCAPE.put("<", "&lt;");
+    HTML_ESCAPE.put(">", "&gt;");
+  }
 
   private final Service service;
 
@@ -90,6 +98,11 @@ public class RestService {
   }
 
   private static Note escapeHtml(final Note note) {
-    return note.setText(StringEscapeUtils.escapeHtml(note.getText()));
+
+    for (Map.Entry<String, String> escape : HTML_ESCAPE.entrySet()) {
+      note.setText(note.getText().replace(escape.getKey(), escape.getValue()));
+    }
+
+    return note;
   }
 }

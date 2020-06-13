@@ -46,18 +46,14 @@ public final class LinkedHashMapLRUCache implements Cache {
     Board board;
 
     boolean cacheHit = cache.containsKey(boardId);
-    if (cacheHit) {
-
-      board = fromCache(boardId);
-
-    } else {
-
-      board = readThroughFunction.apply(boardId);
-      toCache(boardId, board);
+    if (!cacheHit) {
+      toCache(boardId, readThroughFunction.apply(boardId));
     }
 
+    board = fromCache(boardId);
+
     LOGGER.info("boardId = {}, cacheHit = {}", boardId, cacheHit);
-    
+
     int cacheSize = cache.size();
     LOGGER.info("cacheSize = {}", cacheSize);
 
@@ -111,12 +107,12 @@ public final class LinkedHashMapLRUCache implements Cache {
     Map<Column, Map<UUID, Note>> columns = cache.get(boardId);
 
     return new Board().setId(boardId)
-            .setStarts(columns.get(Column.START).values().stream()
-                    .sorted(NOTE_COMPARATOR).collect(toList()))
-            .setStops(columns.get(Column.STOP).values().stream()
-                    .sorted(NOTE_COMPARATOR).collect(toList()))
-            .setContinues(columns.get(Column.CONTINUE).values().stream()
-                    .sorted(NOTE_COMPARATOR).collect(toList()));
+      .setStarts(columns.get(Column.START).values().stream()
+        .sorted(NOTE_COMPARATOR).collect(toList()))
+      .setStops(columns.get(Column.STOP).values().stream()
+        .sorted(NOTE_COMPARATOR).collect(toList()))
+      .setContinues(columns.get(Column.CONTINUE).values().stream()
+        .sorted(NOTE_COMPARATOR).collect(toList()));
   }
 
   private void toCache(final UUID boardId, final Board board) {
@@ -124,12 +120,12 @@ public final class LinkedHashMapLRUCache implements Cache {
     Map<Column, Map<UUID, Note>> columns = cache.computeIfAbsent(boardId, m -> new EnumMap<>(Column.class));
 
     columns.computeIfAbsent(Column.START, m -> new HashMap<>())
-            .putAll(board.getStarts().stream().collect(NOTE_COLLECTOR));
+      .putAll(board.getStarts().stream().collect(NOTE_COLLECTOR));
 
     columns.computeIfAbsent(Column.STOP, m -> new HashMap<>())
-            .putAll(board.getStops().stream().collect(NOTE_COLLECTOR));
+      .putAll(board.getStops().stream().collect(NOTE_COLLECTOR));
 
     columns.computeIfAbsent(Column.CONTINUE, m -> new HashMap<>())
-            .putAll(board.getContinues().stream().collect(NOTE_COLLECTOR));
+      .putAll(board.getContinues().stream().collect(NOTE_COLLECTOR));
   }
 }

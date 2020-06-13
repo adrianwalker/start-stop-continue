@@ -44,7 +44,7 @@ public final class WebServletTest {
       dataAccess,
       new NonCachingCache(boardId -> dataAccess.readBoard(boardId)),
       executorService, 0);
-    WebServlet servlet = new WebServlet(service);
+    WebServlet servlet = new WebServlet(service, 0);
     servlet.doGet(request, response);
 
     ArgumentCaptor<String> stringCaptor = ArgumentCaptor.forClass(String.class);

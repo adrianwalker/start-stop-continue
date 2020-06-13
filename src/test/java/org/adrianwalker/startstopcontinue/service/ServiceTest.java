@@ -66,12 +66,8 @@ public final class ServiceTest {
       dataAccess,
       new NonCachingCache(boardId -> dataAccess.readBoard(boardId)),
       executorService, 0);
-    Board board = service.createBoard();
-    assertNotNull(board);
-    assertNotNull(board.getId());
-    assertEquals(0, board.getStarts().size());
-    assertEquals(0, board.getStops().size());
-    assertEquals(0, board.getContinues().size());
+    UUID boardId = service.createBoard();
+    assertNotNull(boardId);
   }
 
   @Test
