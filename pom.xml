@@ -54,6 +54,28 @@
         </plugins>
       </build>
     </profile>
+    
+    <profile>
+      <id>minio</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>exec-maven-plugin</artifactId>
+            <version>1.6.0</version>
+            <configuration>
+              <environmentVariables>
+                <STARTSTOPCONTINUE_DATA_ENDPOINT>localhost</STARTSTOPCONTINUE_DATA_ENDPOINT>
+                <STARTSTOPCONTINUE_DATA_PORT>9000</STARTSTOPCONTINUE_DATA_PORT>
+                <STARTSTOPCONTINUE_DATA_ACCESS_KEY>minioadmin</STARTSTOPCONTINUE_DATA_ACCESS_KEY>
+                <STARTSTOPCONTINUE_DATA_SECRET_KEY>minioadmin</STARTSTOPCONTINUE_DATA_SECRET_KEY>
+                <STARTSTOPCONTINUE_DATA_BUCKET>start-stop-continue</STARTSTOPCONTINUE_DATA_BUCKET>
+              </environmentVariables>
+            </configuration>
+          </plugin>          
+        </plugins>
+      </build>
+    </profile>
   </profiles>
   
   <build>

@@ -7,7 +7,7 @@ import org.adrianwalker.startstopcontinue.model.Note;
 
 public interface DataAccess {
 
-  void createBoard(Board board);
+  void createBoard(UUID boardId);
 
   Board readBoard(UUID boardId);
 

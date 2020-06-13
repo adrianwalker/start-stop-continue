@@ -34,7 +34,7 @@ public final class JsonFileSystemDataAccessTest {
     String textCreate = "Test 1";
     String textUpdate = "Test 2";
 
-    dataAccess.createBoard(board);
+    dataAccess.createBoard(boardId);
     assertTrue(Files.exists(Path.of("target/test", boardId.toString())));
 
     dataAccess.createNote(boardId, Column.START, new Note()
@@ -96,12 +96,7 @@ public final class JsonFileSystemDataAccessTest {
     DataAccess dataAccess = new JsonFileSystemDataAccess(Path.of("/doesnotexist"));
 
     UUID boardId = UUID.randomUUID();
-    Board board = new Board().setId(boardId)
-      .setStarts(new ArrayList<>())
-      .setStops(new ArrayList<>())
-      .setContinues(new ArrayList<>());
-
-    dataAccess.createBoard(board);
+    dataAccess.createBoard(boardId);
   }
 
   @Test(expected = RuntimeException.class)
@@ -131,11 +126,7 @@ public final class JsonFileSystemDataAccessTest {
     DataAccess dataAccess = new JsonFileSystemDataAccess(Path.of("target/test"));
 
     UUID boardId = UUID.randomUUID();
-    Board board = new Board().setId(boardId)
-      .setStarts(new ArrayList<>())
-      .setStops(new ArrayList<>())
-      .setContinues(new ArrayList<>());
-    dataAccess.createBoard(board);
+    dataAccess.createBoard(boardId);
 
     UUID noteId = UUID.randomUUID();
     dataAccess.createNote(boardId, Column.START, new Note().setId(noteId));

@@ -7,22 +7,36 @@ import io.minio.messages.Item;
 import java.io.InputStream;
 import java.io.PipedInputStream;
 import java.io.PipedOutputStream;
+import static java.util.Collections.EMPTY_LIST;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
-import static java.util.stream.Collectors.toList;
 import java.util.stream.Stream;
 import java.util.stream.StreamSupport;
 import javax.ws.rs.core.MediaType;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
+import static java.util.Map.entry;
+import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
+import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 
 public final class MinioDataAccess implements DataAccess {
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String NAME_DELIMITER = "/";
   private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
+  private static final BinaryOperator<List<Note>> NOTE_MERGER = (l, r) -> {
+    r.addAll(l);
+    r.sort(NOTE_COMPARATOR);
+
+    return r;
+  };
+  private static final Supplier<EnumMap<Column, List<Note>>> ENUM_MAP_SUPPLIER = () -> new EnumMap<>(Column.class);
 
   private final MinioClient minioClient;
   private final String bucketName;
@@ -44,9 +58,7 @@ public final class MinioDataAccess implements DataAccess {
   }
 
   @Override
-  public void createBoard(final Board board) {
-
-    writeBoard(board);
+  public void createBoard(final UUID boardId) {
   }
 
   @Override
@@ -58,10 +70,12 @@ public final class MinioDataAccess implements DataAccess {
   @Override
   public Board readBoard(final UUID boardId) {
 
+    Map<Column, List<Note>> columnNotes = readNotes(boardId);
+
     return new Board().setId(boardId)
-      .setStarts(readNotes(columnName(boardId, Column.START)))
-      .setStops(readNotes(columnName(boardId, Column.STOP)))
-      .setContinues(readNotes(columnName(boardId, Column.CONTINUE)));
+      .setStarts(columnNotes.getOrDefault(Column.START, EMPTY_LIST))
+      .setStops(columnNotes.getOrDefault(Column.STOP, EMPTY_LIST))
+      .setContinues(columnNotes.getOrDefault(Column.CONTINUE, EMPTY_LIST));
   }
 
   @Override
@@ -95,31 +109,40 @@ public final class MinioDataAccess implements DataAccess {
     return String.join(NAME_DELIMITER, columnName(boardId, column), noteId.toString());
   }
 
-  private void writeBoard(final Board board) {
-
-    board.getStarts().forEach(note -> writeNote(noteName(board.getId(), Column.START, note.getId()), note));
-    board.getContinues().forEach(note -> writeNote(noteName(board.getId(), Column.CONTINUE, note.getId()), note));
-    board.getStops().forEach(note -> writeNote(noteName(board.getId(), Column.STOP, note.getId()), note));
+  private String objectName(Result<Item> result) {
+    try {
+      return result.get().objectName();
+    } catch (final Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
-  private List<Note> readNotes(final String columnName) {
+  private Map<Column, List<Note>> readNotes(final UUID boardId) {
 
-    Stream<Result<Item>> results = StreamSupport
-      .stream(minioClient
-        .listObjects(this.bucketName, columnName, true)
-        .spliterator(), true);
-
-    Stream<Note> notes = results.map(result -> {
-      try {
-        return readNote(result.get().objectName());
-      } catch (final Exception e) {
-        throw new RuntimeException(e);
-      }
-    });
-
-    return notes
-      .sorted(NOTE_COMPARATOR)
-      .collect(toList());
+    return Stream.of(Column.values()).parallel()
+      .map(
+        column -> entry(
+          column, 
+          columnName(boardId, column))
+      ).map(
+        columnName -> entry(
+          columnName.getKey(),
+          minioClient.listObjects(this.bucketName, columnName.getValue(), true))
+      ).map(
+        columnResults -> entry(
+          columnResults.getKey(),
+          StreamSupport.stream(columnResults.getValue().spliterator(), true))
+      ).map(
+        columnResults -> entry(
+          columnResults.getKey(),
+          columnResults.getValue().map(result -> readNote(objectName(result))))
+      ).collect(toMap(
+        entry -> entry.getKey(),
+        entry -> entry.getValue()
+          .sorted(NOTE_COMPARATOR)
+          .collect(toList()),
+        NOTE_MERGER,
+        ENUM_MAP_SUPPLIER));
   }
 
   private void writeNote(final String name, final Note note) {

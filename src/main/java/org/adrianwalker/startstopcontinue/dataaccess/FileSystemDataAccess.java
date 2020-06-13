@@ -3,10 +3,17 @@ package org.adrianwalker.startstopcontinue.dataaccess;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import static java.util.Collections.EMPTY_LIST;
 import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
+import static java.util.Map.entry;
 import java.util.UUID;
+import java.util.function.BinaryOperator;
+import java.util.function.Supplier;
 import static java.util.stream.Collectors.toList;
+import static java.util.stream.Collectors.toMap;
 import java.util.stream.Stream;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Note;
@@ -15,6 +22,13 @@ import org.adrianwalker.startstopcontinue.model.Column;
 public abstract class FileSystemDataAccess implements DataAccess {
 
   private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
+  private static final BinaryOperator<List<Note>> NOTE_MERGER = (l, r) -> {
+    r.addAll(l);
+    r.sort(NOTE_COMPARATOR);
+
+    return r;
+  };
+  private static final Supplier<EnumMap<Column, List<Note>>> ENUM_MAP_SUPPLIER = () -> new EnumMap<>(Column.class);
 
   private final Path path;
 
@@ -23,9 +37,9 @@ public abstract class FileSystemDataAccess implements DataAccess {
   }
 
   @Override
-  public void createBoard(final Board board) {
+  public void createBoard(final UUID boardId) {
 
-    writeBoard(board);
+    writeBoard(boardId);
   }
 
   @Override
@@ -37,10 +51,12 @@ public abstract class FileSystemDataAccess implements DataAccess {
   @Override
   public Board readBoard(final UUID boardId) {
 
+    Map<Column, List<Note>> columnNotes = readNotes(boardId);
+
     return new Board().setId(boardId)
-      .setStarts(readNotes(columnPath(boardId, Column.START)))
-      .setStops(readNotes(columnPath(boardId, Column.STOP)))
-      .setContinues(readNotes(columnPath(boardId, Column.CONTINUE)));
+      .setStarts(columnNotes.getOrDefault(Column.START, EMPTY_LIST))
+      .setStops(columnNotes.getOrDefault(Column.STOP, EMPTY_LIST))
+      .setContinues(columnNotes.getOrDefault(Column.CONTINUE, EMPTY_LIST));
   }
 
   @Override
@@ -75,37 +91,52 @@ public abstract class FileSystemDataAccess implements DataAccess {
       .resolve(noteId.toString());
   }
 
-  private void writeBoard(final Board board) throws RuntimeException {
+  private void writeBoard(final UUID boardId) {
 
     try {
-      Files.createDirectories(boardPath(board.getId()));
+      Files.createDirectories(boardPath(boardId));
 
       for (Column column : Column.values()) {
-        Files.createDirectories(columnPath(board.getId(), column));
+        Files.createDirectories(columnPath(boardId, column));
       }
 
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }
-
-    board.getStarts().forEach(note -> writeNote(notePath(board.getId(), Column.START, note.getId()), note));
-    board.getContinues().forEach(note -> writeNote(notePath(board.getId(), Column.CONTINUE, note.getId()), note));
-    board.getStops().forEach(note -> writeNote(notePath(board.getId(), Column.STOP, note.getId()), note));
   }
 
-  private List<Note> readNotes(final Path columnPath) {
+  private Stream<Path> filesList(final Path path) {
 
-    Stream<Path> notePaths;
     try {
-      notePaths = Files.list(columnPath);
+      return Files.list(path).parallel();
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }
+  }
 
-    return notePaths
-      .map(notePath -> readNote(notePath))
-      .sorted(NOTE_COMPARATOR)
-      .collect(toList());
+  private Map<Column, List<Note>> readNotes(final UUID boardId) {
+
+    return Stream.of(Column.values()).parallel()
+      .map(
+        column -> entry(
+          column,
+          columnPath(boardId, column))
+      ).map(
+        columnPath -> entry(
+          columnPath.getKey(),
+          filesList(columnPath.getValue()))
+      ).map(
+        columnNotePaths -> entry(
+          columnNotePaths.getKey(),
+          columnNotePaths.getValue().map(
+            notePath -> readNote(notePath)))
+      ).collect(toMap(
+        entry -> entry.getKey(),
+        entry -> entry.getValue()
+          .sorted(NOTE_COMPARATOR)
+          .collect(toList()),
+        NOTE_MERGER,
+        ENUM_MAP_SUPPLIER));
   }
 
   protected abstract void writeNote(final Path notePath, final Note note);

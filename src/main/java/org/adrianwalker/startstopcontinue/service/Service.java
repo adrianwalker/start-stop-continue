@@ -33,17 +33,16 @@ public final class Service {
 
   public final Board createBoard() {
 
-    Board board = new Board()
-      .setId(UUID.randomUUID())
-      .setStarts(new ArrayList<>())
-      .setStops(new ArrayList<>())
-      .setContinues(new ArrayList<>());
-
-    dataAccess.createBoard(board);
+    UUID boardId = UUID.randomUUID();
+    dataAccess.createBoard(boardId);
 
     logMemoryUsage();
 
-    return board;
+    return new Board()
+      .setId(boardId)
+      .setStarts(new ArrayList<>())
+      .setStops(new ArrayList<>())
+      .setContinues(new ArrayList<>());
   }
 
   public final Board readBoard(final UUID boardId) {
