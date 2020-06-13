@@ -27,6 +27,8 @@ import org.adrianwalker.startstopcontinue.cache.Cache;
 import org.adrianwalker.startstopcontinue.cache.SessionsCache;
 import org.adrianwalker.startstopcontinue.cache.SessionsCacheFactory;
 import org.adrianwalker.startstopcontinue.configuration.Configuration;
+import org.eclipse.jetty.server.Handler;
+import org.eclipse.jetty.server.handler.gzip.GzipHandler;
 
 public final class Launcher {
 
@@ -38,6 +40,7 @@ public final class Launcher {
   private static final String[] WELCOME_FILES = {"index.html"};
   private static final String BASE_RESOURCE = "static/";
   private static final int IDLE_TIMEOUT = 30 * 60 * 1000;
+  private static final int COMPRESSION_LEVEL = 9;
 
   public static void main(final String[] args) throws Exception {
 
@@ -56,7 +59,7 @@ public final class Launcher {
     addWebSocketServlet(context, eventPubSub, sessionsCache);
     addDefaultServlet(context);
 
-    server.setHandler(context);
+    server.setHandler(enableCompression(context));
     server.start();
   }
 
@@ -117,6 +120,15 @@ public final class Launcher {
     context.setWelcomeFiles(welcomeFiles);
 
     return context;
+  }
+
+  private static Handler enableCompression(final Handler handler) {
+
+    GzipHandler gzipHandler = new GzipHandler();
+    gzipHandler.setHandler(handler);
+    gzipHandler.setCompressionLevel(COMPRESSION_LEVEL);
+
+    return gzipHandler;
   }
 
   private static void addDefaultServlet(final ServletContextHandler context) {
