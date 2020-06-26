@@ -19,8 +19,11 @@ import static java.util.stream.Collectors.toMap;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
+import org.slf4j.LoggerFactory;
 
 public final class RedisCache implements Cache {
+
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(RedisCache.class);
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String FIELD_SEPERATOR = "/";
@@ -50,7 +53,8 @@ public final class RedisCache implements Cache {
 
     Board board;
 
-    if (exists(boardId.toString())) {
+    boolean cacheHit = exists(boardId.toString());
+    if (cacheHit) {
 
       board = fromCache(boardId);
 
@@ -59,6 +63,8 @@ public final class RedisCache implements Cache {
       board = readThroughFunction.apply(boardId);
       toCache(boardId, board);
     }
+
+    LOGGER.info("boardId = {}, cacheHit = {}", boardId, cacheHit);
 
     return board;
   }
@@ -82,12 +88,6 @@ public final class RedisCache implements Cache {
 
     hset(boardId.toString(), noteField(column, note.getId()), writeNote(note));
     expire(boardId.toString(), expirySeconds);
-  }
-
-  @Override
-  public void delete(final UUID boardId) {
-
-    del(boardId.toString());
   }
 
   @Override
@@ -132,11 +132,6 @@ public final class RedisCache implements Cache {
   private boolean exists(final String... keys) {
 
     return redisConnection.sync().exists(keys) > 0;
-  }
-
-  private void del(final String... keys) {
-
-    redisConnection.async().del(keys);
   }
 
   private void expire(final String key, final long seconds) {

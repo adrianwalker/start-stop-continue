@@ -17,7 +17,7 @@ import org.slf4j.LoggerFactory;
 
 public final class LinkedHashMapLRUCache implements Cache {
 
-  private final static org.slf4j.Logger LOGGER = LoggerFactory.getLogger(LinkedHashMapLRUCache.class);
+  private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(LinkedHashMapLRUCache.class);
 
   private static final float LOAD_FACTOR = 0.75f;
   private static final boolean ACCESS_ORDER = true;
@@ -46,11 +46,15 @@ public final class LinkedHashMapLRUCache implements Cache {
     Board board;
 
     boolean cacheHit = cache.containsKey(boardId);
-    if (!cacheHit) {
-      toCache(boardId, readThroughFunction.apply(boardId));
-    }
+    if (cacheHit) {
 
-    board = fromCache(boardId);
+      board = fromCache(boardId);
+
+    } else {
+
+      board = readThroughFunction.apply(boardId);
+      toCache(boardId, board);
+    }
 
     LOGGER.info("boardId = {}, cacheHit = {}", boardId, cacheHit);
 
@@ -78,15 +82,6 @@ public final class LinkedHashMapLRUCache implements Cache {
     }
 
     cache.get(boardId).get(column).put(note.getId(), note);
-
-    int cacheSize = cache.size();
-    LOGGER.info("cacheSize = {}", cacheSize);
-  }
-
-  @Override
-  public void delete(final UUID boardId) {
-
-    cache.remove(boardId);
 
     int cacheSize = cache.size();
     LOGGER.info("cacheSize = {}", cacheSize);

@@ -31,8 +31,4 @@ public final class NonCachingCache implements Cache {
   @Override
   public void delete(final UUID boardId, final Column column, final UUID noteId) {
   }
-
-  @Override
-  public void delete(final UUID boardId) {
-  }
 }

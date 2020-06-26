@@ -24,8 +24,6 @@ import org.eclipse.jetty.websocket.jsr356.server.ServerContainer;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.adrianwalker.startstopcontinue.cache.Cache;
-import org.adrianwalker.startstopcontinue.cache.SessionsCache;
-import org.adrianwalker.startstopcontinue.cache.SessionsCacheFactory;
 import org.adrianwalker.startstopcontinue.configuration.Configuration;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
@@ -49,7 +47,6 @@ public final class Launcher {
 
     DataAccess dataAccess = createDataAccess(config);
     Cache cache = createCache(config, dataAccess);
-    SessionsCache sessionsCache = createSessionsCache(config, cache);
     EventPubSub eventPubSub = createPubSub(config);
     Service service = createService(config, dataAccess, cache);
     Server server = createServer(config);
@@ -57,7 +54,7 @@ public final class Launcher {
 
     addRestServlet(context, service);
     addWebServlet(context, service);
-    addWebSocketServlet(context, eventPubSub, sessionsCache);
+    addWebSocketServlet(context, eventPubSub);
     addDefaultServlet(context);
 
     server.setHandler(enableCompression(context));
@@ -74,13 +71,6 @@ public final class Launcher {
     return new CacheFactory(
       config.getCacheConfiguration(),
       boardId -> dataAccess.readBoard(boardId)).create();
-  }
-
-  private static SessionsCache createSessionsCache(final Configuration config, final Cache cache) {
-
-    return new SessionsCacheFactory(
-      config.getCacheConfiguration(),
-      boardId -> cache.delete(boardId)).create();
   }
 
   private static DataAccess createDataAccess(final Configuration config) {
@@ -138,13 +128,13 @@ public final class Launcher {
   }
 
   private static void addWebSocketServlet(
-    final ServletContextHandler context, final EventPubSub eventPubSub, final SessionsCache sessionsCache) throws Exception {
+    final ServletContextHandler context, final EventPubSub eventPubSub) throws Exception {
 
     ServerContainer container = WebSocketServerContainerInitializer.configureContext(context);
     container.setDefaultMaxSessionIdleTimeout(IDLE_TIMEOUT);
     container.addEndpoint(ServerEndpointConfig.Builder
       .create(EventSocket.class, WEB_SOCKET_SERVLET_PATH)
-      .configurator(new EventSocketConfigurator(eventPubSub, sessionsCache))
+      .configurator(new EventSocketConfigurator(eventPubSub))
       .build());
   }
 

@@ -14,7 +14,6 @@ import javax.websocket.OnMessage;
 import javax.websocket.OnOpen;
 import javax.websocket.Session;
 import javax.websocket.server.ServerEndpoint;
-import org.adrianwalker.startstopcontinue.cache.SessionsCache;
 import org.adrianwalker.startstopcontinue.pubsub.Event;
 
 @ServerEndpoint("")
@@ -24,14 +23,12 @@ public final class EventSocket {
   private static final String BOARD_ID = "boardId";
   private static final Map<UUID, Set<Session>> SESSIONS = new HashMap<>();
   private final EventPubSub eventPubSub;
-  private final SessionsCache sessionsCache;
 
   public static final BiConsumer<UUID, Event> BROADCAST_CONSUMER = (boardId, event) -> broadcast(boardId, event);
 
-  public EventSocket(final EventPubSub eventPubSub, final SessionsCache sessionsCache) {
+  public EventSocket(final EventPubSub eventPubSub) {
 
     this.eventPubSub = eventPubSub;
-    this.sessionsCache = sessionsCache;
   }
 
   @OnOpen
@@ -45,7 +42,6 @@ public final class EventSocket {
     }
 
     SESSIONS.get(boardId).add(session);
-    sessionsCache.incrementSessions(boardId);
   }
 
   @OnMessage
@@ -67,7 +63,6 @@ public final class EventSocket {
 
     UUID boardId = getBoardId(session);
     SESSIONS.get(boardId).remove(session);
-    sessionsCache.decrementSessions(boardId);
     
     if (SESSIONS.get(boardId).isEmpty()) {
       SESSIONS.remove(boardId);
