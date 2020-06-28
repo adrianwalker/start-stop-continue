@@ -4,9 +4,19 @@ import java.util.List;
 
 public final class Board extends IDable<Board> {
 
+  private boolean locked;
   private List<Note> starts;
   private List<Note> stops;
   private List<Note> continues;
+
+  public boolean isLocked() {
+    return locked;
+  }
+
+  public Board setLocked(final boolean locked) {
+    this.locked = locked;
+    return this;
+  }
 
   public List<Note> getStarts() {
     return starts;

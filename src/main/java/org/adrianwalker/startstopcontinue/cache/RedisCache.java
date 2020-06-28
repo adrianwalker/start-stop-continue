@@ -26,6 +26,7 @@ public final class RedisCache implements Cache {
   private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(RedisCache.class);
 
   private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+  public static final String LOCKED = "locked";
   private static final String FIELD_SEPERATOR = "/";
   private static final List<Note> EMPTY_NOTES = Collections.EMPTY_LIST;
   private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
@@ -67,6 +68,16 @@ public final class RedisCache implements Cache {
     LOGGER.info("boardId = {}, cacheHit = {}", boardId, cacheHit);
 
     return board;
+  }
+
+  @Override
+  public void lock(final UUID boardId) {
+
+    if (!exists(boardId.toString())) {
+      read(boardId);
+    }
+
+    writeLock(boardId, true);
   }
 
   @Override
@@ -119,6 +130,11 @@ public final class RedisCache implements Cache {
 
     return combined;
   }
+  
+  private void writeLock(final UUID boardId, final boolean locked) {
+
+    hset(boardId.toString(), LOCKED, String.valueOf(locked));
+  }
 
   private static Note readNote(final String value) {
 
@@ -126,6 +142,15 @@ public final class RedisCache implements Cache {
       return OBJECT_MAPPER.readValue(value, Note.class);
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
+    }
+  }
+
+  private String writeNote(final Note note) {
+
+    try {
+      return OBJECT_MAPPER.writeValueAsString(note);
+    } catch (final JsonProcessingException jpe) {
+      throw new RuntimeException(jpe);
     }
   }
 
@@ -164,21 +189,15 @@ public final class RedisCache implements Cache {
     redisConnection.async().hdel(key, members);
   }
 
-  private String writeNote(final Note note) {
-
-    try {
-      return OBJECT_MAPPER.writeValueAsString(note);
-    } catch (final JsonProcessingException jpe) {
-      throw new RuntimeException(jpe);
-    }
-  }
-
   private Board fromCache(final UUID boardId) {
 
-    Map<String, String> notes = hgetAll(boardId.toString());
-    Map<Column, List<Note>> columns = notes.entrySet().stream().collect(NOTE_COLLECTOR);
+    Map<String, String> hash = hgetAll(boardId.toString());
+    
+    boolean locked = Boolean.valueOf(hash.remove(LOCKED));
+    Map<Column, List<Note>> columns = hash.entrySet().stream().collect(NOTE_COLLECTOR);
 
     return new Board().setId(boardId)
+      .setLocked(locked)
       .setStarts(columns.getOrDefault(Column.START, EMPTY_NOTES).stream()
         .sorted(NOTE_COMPARATOR)
         .collect(toList()))
@@ -192,22 +211,25 @@ public final class RedisCache implements Cache {
 
   private void toCache(final UUID boardId, final Board board) {
 
-    Map<String, String> notes = new HashMap<>();
+    Map<String, String> hash = new HashMap<>();
+    
+    String locked = String.valueOf(board.isLocked());
+    hash.put(LOCKED, locked);
 
-    notes.putAll(board.getStarts().stream()
+    hash.putAll(board.getStarts().stream()
       .collect(Collectors.toMap(note -> noteField(Column.START, note.getId()),
         note -> writeNote(note))));
 
-    notes.putAll(board.getStops().stream()
+    hash.putAll(board.getStops().stream()
       .collect(Collectors.toMap(note -> noteField(Column.STOP, note.getId()),
         note -> writeNote(note))));
 
-    notes.putAll(board.getContinues().stream()
+    hash.putAll(board.getContinues().stream()
       .collect(Collectors.toMap(note -> noteField(Column.CONTINUE, note.getId()),
         note -> writeNote(note))));
 
-    if (!notes.isEmpty()) {
-      hmset(boardId.toString(), notes);
+    if (!hash.isEmpty()) {
+      hmset(boardId.toString(), hash);
     }
   }
 }

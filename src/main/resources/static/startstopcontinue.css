@@ -116,6 +116,18 @@ ol li input[type="color"] {
     display: none;
   }
 }
+#lock {
+  position: fixed;
+  bottom: 1em;
+  right: 4em;
+  cursor: pointer;
+}
+#locked {
+  display: none;
+}
+#unlocked {
+  display: none;
+}
 #error {
   display: none;
   position: fixed;

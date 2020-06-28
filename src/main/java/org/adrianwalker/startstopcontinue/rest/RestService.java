@@ -51,6 +51,19 @@ public class RestService {
   @POST
   @Consumes(MediaType.APPLICATION_JSON)
   @Produces(MediaType.APPLICATION_JSON)
+  @Path("board/{boardId}/lock")
+  public Response lockBoard(
+    @PathParam("boardId")
+    final UUID boardId) {
+
+    service.lockBoard(boardId);
+    
+    return Response.ok(new ID().setId(boardId)).build();
+  }
+
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
   @Path("board/{boardId}/column/{column}/note")
   public Response createNote(
     @PathParam("boardId")

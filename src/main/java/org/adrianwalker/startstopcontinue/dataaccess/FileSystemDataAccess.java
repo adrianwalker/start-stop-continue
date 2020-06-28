@@ -29,6 +29,7 @@ public abstract class FileSystemDataAccess implements DataAccess {
     return r;
   };
   private static final Supplier<EnumMap<Column, List<Note>>> ENUM_MAP_SUPPLIER = () -> new EnumMap<>(Column.class);
+  private static final String LOCK = "lock";
 
   private final Path path;
 
@@ -43,20 +44,28 @@ public abstract class FileSystemDataAccess implements DataAccess {
   }
 
   @Override
-  public void createNote(final UUID boardId, final Column column, final Note note) {
-
-    writeNote(notePath(boardId, column, note.getId()), note);
-  }
-
-  @Override
   public Board readBoard(final UUID boardId) {
 
+    boolean locked = locked(boardId);
     Map<Column, List<Note>> columnNotes = readNotes(boardId);
 
     return new Board().setId(boardId)
+      .setLocked(locked)
       .setStarts(columnNotes.getOrDefault(Column.START, EMPTY_LIST))
       .setStops(columnNotes.getOrDefault(Column.STOP, EMPTY_LIST))
       .setContinues(columnNotes.getOrDefault(Column.CONTINUE, EMPTY_LIST));
+  }
+
+  @Override
+  public void lockBoard(final UUID boardId) {
+
+    writeLock(boardId);
+  }
+
+  @Override
+  public void createNote(final UUID boardId, final Column column, final Note note) {
+
+    writeNote(notePath(boardId, column, note.getId()), note);
   }
 
   @Override
@@ -137,6 +146,24 @@ public abstract class FileSystemDataAccess implements DataAccess {
           .collect(toList()),
         NOTE_MERGER,
         ENUM_MAP_SUPPLIER));
+  }
+
+  private boolean locked(final UUID boardId) {
+
+    Path lockPath = boardPath(boardId).resolve(LOCK);
+
+    return Files.exists(lockPath) && Files.isRegularFile(lockPath);
+  }
+
+  private void writeLock(final UUID boardId) {
+
+    Path lockPath = boardPath(boardId).resolve(LOCK);
+
+    try {
+      Files.createFile(lockPath);
+    } catch (final IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
   }
 
   protected abstract void writeNote(final Path notePath, final Note note);

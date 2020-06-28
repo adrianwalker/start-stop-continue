@@ -10,12 +10,8 @@ import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 import org.adrianwalker.startstopcontinue.cache.Cache;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class Service {
-
-  private final static Logger LOGGER = LoggerFactory.getLogger(Service.class);
 
   private final DataAccess dataAccess;
   private final Cache cache;
@@ -49,7 +45,21 @@ public final class Service {
     return board;
   }
 
+  public final void lockBoard(final UUID boardId) {
+    
+    checkLock(boardId);
+
+    executor.execute(() -> {
+      dataAccess.lockBoard(boardId);
+      cache.lock(boardId);
+    });
+
+    logMemoryUsage();
+  }
+
   public final void createNote(final UUID boardId, final Column column, final Note note) {
+    
+    checkLock(boardId);
 
     note.setId(UUID.randomUUID())
       .setCreated(new Date())
@@ -64,6 +74,8 @@ public final class Service {
   }
 
   public final void updateNote(final UUID boardId, final Column column, final Note data) {
+    
+    checkLock(boardId);
 
     Note note = cache.read(boardId, column, data.getId())
       .setText(truncateNoteText(data.getText()));
@@ -78,6 +90,8 @@ public final class Service {
 
   public final void deleteNote(final UUID boardId, final Column column, final UUID noteId) {
 
+    checkLock(boardId);
+    
     executor.execute(() -> {
       dataAccess.deleteNote(boardId, column, noteId);
       cache.delete(boardId, column, noteId);
@@ -93,5 +107,14 @@ public final class Service {
     }
 
     return text;
+  }
+
+  private void checkLock(final UUID boardId) {
+
+    boolean locked = readBoard(boardId).isLocked();
+
+    if (locked) {
+      throw new RuntimeException("This board is locked for editing");
+    }
   }
 }

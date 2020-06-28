@@ -9,6 +9,7 @@ public final class RestServlet extends ResourceConfig {
   public RestServlet(final Service service) {
 
     register(JacksonFeature.class);
+    register(RuntimeExceptionMapper.class);
     registerInstances(new RestService(service));
   }
 }

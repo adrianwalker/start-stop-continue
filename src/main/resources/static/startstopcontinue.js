@@ -16,6 +16,18 @@ function uuid() {
   return uuid;
 }
 
+if (!String.prototype.endsWith) {
+
+  String.prototype.endsWith = function (search, this_len) {
+
+    if (this_len === undefined || this_len > this.length) {
+      this_len = this.length;
+    }
+
+    return this.substring(this_len - search.length, this_len) === search;
+  };
+}
+
 $(document).ready(function () {
 
   var _TEMP = "_temp";
@@ -25,6 +37,8 @@ $(document).ready(function () {
     "CONTINUE": $("#continue-list")
   };
 
+  var boardLocked = false;
+
   var webSocket = createWebSocket(function () {
     loadBoard(boardId);
   });
@@ -32,32 +46,85 @@ $(document).ready(function () {
   startWebSocketPing(60 * 1000);
 
   $("#add-start").click(function () {
-    addNote(boardId, "START", {id: uuid() + _TEMP, color: $("#start-color").val(), text: "Start "});
+    addStart(boardId);
   });
 
   $("#add-stop").click(function () {
-    addNote(boardId, "STOP", {id: uuid() + _TEMP, color: $("#stop-color").val(), text: "Stop "});
+    addStop(boardId);
   });
 
   $("#add-continue").click(function () {
-    addNote(boardId, "CONTINUE", {id: uuid() + _TEMP, color: $("#continue-color").val(), text: "Continue "});
+    addContinue(boardId);
   });
 
-  function noteHtml(id, color, text) {
+  $("#lock").click(function () {
+    lock(boardId);
+  });
 
-    return '<li id="' + id + '" server-id="' + id + '" style="background-color: ' + color + '">'
-            + '  <textarea>' + text + '</textarea>'
-            + '</li>';
+  function addStart(boardId) {
+
+    addNote(boardId, "START", {
+      id: uuid() + _TEMP,
+      color: $("#start-color").val(),
+      text: "Start "
+    });
+  }
+
+  function addStop(boardId) {
+
+    addNote(boardId, "STOP", {
+      id: uuid() + _TEMP,
+      color: $("#stop-color").val(),
+      text: "Stop "
+    });
+  }
+
+  function addContinue(boardId) {
+
+    addNote(boardId, "CONTINUE", {
+      id: uuid() + _TEMP,
+      color: $("#continue-color").val(),
+      text: "Continue "
+    });
+  }
+
+  function addNote(boardId, column, note) {
+
+    if (checkBoardLocked()) {
+      return;
+    }
+
+    loadNote(boardId, column, {
+      id: note.id,
+      color: note.color,
+      text: note.text
+    });
+
+    scrollNote(note.id);
+  }
+
+  function lock(boardId) {
+
+    if (checkBoardLocked()) {
+      return;
+    }
+
+    lockBoard(boardId).done(function (data) {
+
+      setBoardLocked(true);
+      sendEvent({
+        id: data.id,
+        lock: true
+      });
+
+    }).fail(handleFailure);
   }
 
   function loadBoard(boardId) {
 
-    var url = "api/board/" + boardId;
-    return $.ajax({
-      url: url,
-      type: 'GET',
-      contentType: 'application/json'
-    }).done(function (data) {
+    readBoard(boardId).done(function (data) {
+
+      setBoardLocked(data.locked);
 
       COLUMNS['START'].empty();
       $(data.starts).each(function (index, data) {
@@ -73,6 +140,7 @@ $(document).ready(function () {
       $(data.continues).each(function (index, data) {
         loadNote(boardId, 'CONTINUE', data);
       });
+
     }).fail(handleFailure);
   }
 
@@ -85,12 +153,6 @@ $(document).ready(function () {
     });
   }
 
-  function addNote(boardId, column, note) {
-
-    loadNote(boardId, column, {id: note.id, color: note.color, text: note.text});
-    scrollNote(note.id);
-  }
-
   function loadNote(boardId, column, note) {
 
     COLUMNS[column].append(noteHtml(note.id, note.color, note.text));
@@ -100,35 +162,108 @@ $(document).ready(function () {
       var serverId = $("#" + note.id).attr("server-id");
 
       if (text === "" && serverId.endsWith(_TEMP)) {
-
-        $("#" + note.id).remove();
-
+        onRemove(note);
       } else if (text === "") {
-
-        deleteNote(boardId, column, serverId).done(function (data) {
-
-          $("li[server-id='" + data.id + "']").remove();
-          sendEvent(boardId, column, {id: data.id, color: note.color, text: text});
-
-        }).fail(handleFailure);
-
+        onDelete(boardId, column, note, serverId, text);
       } else if (serverId.endsWith(_TEMP)) {
-
-        saveNote(boardId, column, {color: note.color, text: text}).done(function (data) {
-
-          $("#" + note.id).attr("server-id", data.id);
-          sendEvent(boardId, column, {id: data.id, color: note.color, text: text});
-
-        }).fail(handleFailure);
-
+        onSave(boardId, column, note, text);
       } else {
-
-        updateNote(boardId, column, {id: serverId, text: text}).done(function (data) {
-
-          sendEvent(boardId, column, {id: data.id, color: note.color, text: text});
-
-        }).fail(handleFailure);
+        onUpdate(boardId, column, note, serverId, text);
       }
+    });
+  }
+
+  function noteHtml(id, color, text) {
+
+    return '<li id="' + id + '" server-id="' + id + '" style="background-color: ' + color + '">'
+            + '  <textarea>' + text + '</textarea>'
+            + '</li>';
+  }
+
+  function onRemove(note) {
+
+    $("#" + note.id).remove();
+  }
+
+  function onDelete(boardId, column, note, serverId, text) {
+
+    if (checkBoardLocked()) {
+      return;
+    }
+
+    deleteNote(boardId, column, serverId).done(function (data) {
+
+      $("li[server-id='" + data.id + "']").remove();
+
+      sendEvent({
+        boardId: boardId,
+        column: column,
+        note: {
+          id: data.id,
+          color: note.color,
+          text: text
+        }});
+
+    }).fail(handleFailure);
+  }
+
+  function onSave(boardId, column, note, text) {
+
+    if (checkBoardLocked()) {
+      return;
+    }
+
+    saveNote(boardId, column, {color: note.color, text: text}).done(function (data) {
+
+      $("#" + note.id).attr("server-id", data.id);
+
+      sendEvent({
+        boardId: boardId,
+        column: column,
+        note: {
+          id: data.id,
+          color: note.color,
+          text: text
+        }});
+
+    }).fail(handleFailure);
+  }
+
+  function onUpdate(boardId, column, note, serverId, text) {
+
+    if (checkBoardLocked()) {
+      return;
+    }
+
+    updateNote(boardId, column, {id: serverId, text: text}).done(function (data) {
+
+      sendEvent({
+        boardId: boardId,
+        column: column,
+        note: {
+          id: data.id,
+          color: note.color,
+          text: text
+        }});
+
+    }).fail(handleFailure);
+  }
+
+  function readBoard(boardId) {
+
+    return $.ajax({
+      url: "api/board/" + boardId,
+      type: 'GET',
+      contentType: 'application/json'
+    });
+  }
+
+  function lockBoard(boardId) {
+
+    return $.ajax({
+      url: "api/board/" + boardId + "/lock",
+      type: 'POST',
+      contentType: 'application/json'
     });
   }
 
@@ -171,8 +306,7 @@ $(document).ready(function () {
     };
 
     webSocket.onmessage = function (event) {
-      var data = JSON.parse(event.data);
-      handleEvent(data.boardId, data.column, data.note);
+      handleEvent(JSON.parse(event.data));
     };
 
     return webSocket;
@@ -184,13 +318,14 @@ $(document).ready(function () {
   }
 
   function isWebSocketOpen(webSocket) {
+
     return webSocket.readyState === webSocket.OPEN;
   }
 
-  function sendEvent(boardId, column, note) {
+  function sendEvent(event) {
 
     var send = function () {
-      webSocket.send(JSON.stringify({boardId: boardId, column: column, note: note}));
+      webSocket.send(JSON.stringify(event));
     };
 
     if (isWebSocketOpen(webSocket)) {
@@ -219,22 +354,74 @@ $(document).ready(function () {
     }
   }
 
-  function handleEvent(boardId, column, note) {
+  function handleEvent(event) {
 
-    if (note.id && $("li[server-id='" + note.id + "']").length) {
-
-      if (note.text) {
-        $("li[server-id='" + note.id + "'] > textarea").val(note.text);
-      } else {
-        $("li[server-id='" + note.id + "']").remove();
-      }
-
-    } else if (note.id && note.text) {
-      loadNote(boardId, column, note);
+    if ('note' in event) {
+      handleNoteEvent(event);
+    } else if ('lock') {
+      handleBoardLockEvent(event);
     }
   }
 
-  function handleFailure(error) {
+  function handleNoteEvent(event) {
+
+    if (event.note.id && $("li[server-id='" + event.note.id + "']").length) {
+      if (event.note.text) {
+        $("li[server-id='" + event.note.id + "'] > textarea").val(event.note.text);
+      } else {
+        $("li[server-id='" + event.note.id + "']").remove();
+      }
+    } else if (event.note.id && event.note.text) {
+      loadNote(event.boardId, event.column, event.note);
+    }
+  }
+
+  function handleBoardLockEvent(event) {
+
+    if (!boardLocked && event.lock) {
+      setBoardLocked(true);
+    }
+  }
+
+  function checkBoardLocked() {
+
+    if (boardLocked) {
+      handleFailure(null, null, "This board is locked for editing");
+    }
+
+    return boardLocked;
+  }
+
+  function setBoardLocked(locked) {
+
+    boardLocked = locked;
+
+    if (boardLocked) {
+      $("#unlocked").hide();
+      $("#locked").show();
+    } else {
+      $("#locked").hide();
+      $("#unlocked").show();
+    }
+  }
+
+  function handleFailure(jqXHR, textStatus, errorThrown) {
+
+    var message;
+
+    if (jqXHR) {
+      message = jqXHR.responseText;
+    }
+
+    if (!message) {
+      message = errorThrown;
+    }
+
+    if (!message) {
+      message = "That didn't work";
+    }
+
+    $("#error textarea").val("ERROR\n\n" + message);
 
     var error = $("#error");
     error.show();
@@ -243,13 +430,3 @@ $(document).ready(function () {
     });
   }
 });
-
-if (!String.prototype.endsWith) {
-  String.prototype.endsWith = function (search, this_len) {
-    if (this_len === undefined || this_len > this.length) {
-      this_len = this.length;
-    }
-    return this.substring(this_len - search.length, this_len) === search;
-  };
-}
-

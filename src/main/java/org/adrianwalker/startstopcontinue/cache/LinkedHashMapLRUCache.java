@@ -24,8 +24,47 @@ public final class LinkedHashMapLRUCache implements Cache {
   private static final Collector<Note, ?, Map<UUID, Note>> NOTE_COLLECTOR = toMap(Note::getId, note -> note);
   private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
 
-  private final Map<UUID, Map<Column, Map<UUID, Note>>> cache;
+  private final Map<UUID, CacheEntry> cache;
   private final Function<UUID, Board> readThroughFunction;
+
+  private static final class CacheEntry {
+
+    private boolean locked;
+    private Map<Column, Map<UUID, Note>> data;
+
+    public CacheEntry() {
+
+      this(false, new EnumMap<>(Column.class));
+    }
+
+    public CacheEntry(final boolean locked, final Map<Column, Map<UUID, Note>> data) {
+
+      this.locked = locked;
+      this.data = data;
+    }
+
+    public boolean isLocked() {
+
+      return locked;
+    }
+
+    public CacheEntry setLocked(final boolean locked) {
+
+      this.locked = locked;
+      return this;
+    }
+
+    public Map<Column, Map<UUID, Note>> getData() {
+
+      return data;
+    }
+
+    public CacheEntry setData(final Map<Column, Map<UUID, Note>> data) {
+
+      this.data = data;
+      return this;
+    }
+  }
 
   public LinkedHashMapLRUCache(final int cacheSize, final Function<UUID, Board> readThroughFunction) {
 
@@ -65,13 +104,23 @@ public final class LinkedHashMapLRUCache implements Cache {
   }
 
   @Override
+  public void lock(final UUID boardId) {
+
+    if (!cache.containsKey(boardId)) {
+      read(boardId);
+    }
+
+    cache.get(boardId).setLocked(true);
+  }
+
+  @Override
   public Note read(final UUID boardId, final Column column, final UUID noteId) {
 
     if (!cache.containsKey(boardId)) {
       read(boardId);
     }
 
-    return cache.get(boardId).get(column).get(noteId);
+    return cache.get(boardId).getData().get(column).get(noteId);
   }
 
   @Override
@@ -81,7 +130,7 @@ public final class LinkedHashMapLRUCache implements Cache {
       read(boardId);
     }
 
-    cache.get(boardId).get(column).put(note.getId(), note);
+    cache.get(boardId).getData().get(column).put(note.getId(), note);
 
     int cacheSize = cache.size();
     LOGGER.info("cacheSize = {}", cacheSize);
@@ -94,33 +143,38 @@ public final class LinkedHashMapLRUCache implements Cache {
       read(boardId);
     }
 
-    cache.get(boardId).get(column).remove(noteId);
+    cache.get(boardId).getData().get(column).remove(noteId);
   }
 
   private Board fromCache(final UUID boardId) {
 
-    Map<Column, Map<UUID, Note>> columns = cache.get(boardId);
+    CacheEntry cacheEntry = cache.get(boardId);
 
     return new Board().setId(boardId)
-      .setStarts(columns.get(Column.START).values().stream()
+      .setLocked(cacheEntry.isLocked())
+      .setStarts(cacheEntry.getData().get(Column.START).values().stream()
         .sorted(NOTE_COMPARATOR).collect(toList()))
-      .setStops(columns.get(Column.STOP).values().stream()
+      .setStops(cacheEntry.getData().get(Column.STOP).values().stream()
         .sorted(NOTE_COMPARATOR).collect(toList()))
-      .setContinues(columns.get(Column.CONTINUE).values().stream()
+      .setContinues(cacheEntry.getData().get(Column.CONTINUE).values().stream()
         .sorted(NOTE_COMPARATOR).collect(toList()));
   }
 
   private void toCache(final UUID boardId, final Board board) {
 
-    Map<Column, Map<UUID, Note>> columns = cache.computeIfAbsent(boardId, m -> new EnumMap<>(Column.class));
+    CacheEntry cacheEntry = cache.computeIfAbsent(
+      boardId,
+      ce -> new CacheEntry());
 
-    columns.computeIfAbsent(Column.START, m -> new HashMap<>())
+    cacheEntry.setLocked(board.isLocked());
+
+    cacheEntry.getData().computeIfAbsent(Column.START, m -> new HashMap<>())
       .putAll(board.getStarts().stream().collect(NOTE_COLLECTOR));
 
-    columns.computeIfAbsent(Column.STOP, m -> new HashMap<>())
+    cacheEntry.getData().computeIfAbsent(Column.STOP, m -> new HashMap<>())
       .putAll(board.getStops().stream().collect(NOTE_COLLECTOR));
 
-    columns.computeIfAbsent(Column.CONTINUE, m -> new HashMap<>())
+    cacheEntry.getData().computeIfAbsent(Column.CONTINUE, m -> new HashMap<>())
       .putAll(board.getContinues().stream().collect(NOTE_COLLECTOR));
   }
 }
