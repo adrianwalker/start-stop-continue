@@ -114,10 +114,10 @@ public abstract class FileSystemDataAccess implements DataAccess {
     }
   }
 
-  private Stream<Path> filesList(final Path path) {
+  private List<Path> filesList(final Path path) {
 
-    try {
-      return Files.list(path).parallel();
+    try ( Stream<Path> stream = Files.list(path)) {
+      return stream.collect(toList());
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }
@@ -137,7 +137,7 @@ public abstract class FileSystemDataAccess implements DataAccess {
       ).map(
         columnNotePaths -> entry(
           columnNotePaths.getKey(),
-          columnNotePaths.getValue().map(
+          columnNotePaths.getValue().stream().map(
             notePath -> readNote(notePath)))
       ).collect(toMap(
         entry -> entry.getKey(),
