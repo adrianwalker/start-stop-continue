@@ -28,14 +28,14 @@ public final class CacheFactory {
     if (!config.getCacheHostname().isEmpty() && config.getCachePort() > 0) {
 
       cache = new RedisCache(
-        config.getCacheExpirySeconds(), 
-        createRedisConnection(config), 
+        config.getCacheExpirySeconds(),
+        createRedisConnection(config),
         readThroughFunction);
 
     } else {
 
       cache = new LinkedHashMapLRUCache(
-        config.getCacheSize(), 
+        config.getCacheSize(),
         readThroughFunction);
     }
 

@@ -22,7 +22,11 @@ public final class NonCachingCache implements Cache {
   @Override
   public void lock(final UUID boardId) {
   }
-  
+
+  @Override
+  public void unlock(final UUID boardId) {
+  }
+
   @Override
   public Note read(final UUID boardId, final Column column, final UUID noteId) {
     return new Note().setId(noteId);

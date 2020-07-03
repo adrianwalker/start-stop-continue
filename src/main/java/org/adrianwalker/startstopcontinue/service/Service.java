@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import static org.adrianwalker.startstopcontinue.Monitoring.logMemoryUsage;
+import static org.adrianwalker.startstopcontinue.Monitoring.logOpenFileHandles;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
@@ -32,6 +33,7 @@ public final class Service {
     dataAccess.createBoard(boardId);
 
     logMemoryUsage();
+    logOpenFileHandles();
 
     return boardId;
   }
@@ -41,12 +43,13 @@ public final class Service {
     Board board = cache.read(boardId);
 
     logMemoryUsage();
+    logOpenFileHandles();
 
     return board;
   }
 
   public final void lockBoard(final UUID boardId) {
-    
+
     checkLock(boardId);
 
     executor.execute(() -> {
@@ -55,10 +58,22 @@ public final class Service {
     });
 
     logMemoryUsage();
+    logOpenFileHandles();
+  }
+
+  public final void unlockBoard(final UUID boardId) {
+
+    executor.submit(() -> {
+      dataAccess.unlockBoard(boardId);
+      cache.unlock(boardId);
+    });
+
+    logMemoryUsage();
+    logOpenFileHandles();
   }
 
   public final void createNote(final UUID boardId, final Column column, final Note note) {
-    
+
     checkLock(boardId);
 
     note.setId(UUID.randomUUID())
@@ -71,10 +86,11 @@ public final class Service {
     });
 
     logMemoryUsage();
+    logOpenFileHandles();
   }
 
   public final void updateNote(final UUID boardId, final Column column, final Note data) {
-    
+
     checkLock(boardId);
 
     Note note = cache.read(boardId, column, data.getId())
@@ -86,18 +102,20 @@ public final class Service {
     });
 
     logMemoryUsage();
+    logOpenFileHandles();
   }
 
   public final void deleteNote(final UUID boardId, final Column column, final UUID noteId) {
 
     checkLock(boardId);
-    
+
     executor.execute(() -> {
       dataAccess.deleteNote(boardId, column, noteId);
       cache.delete(boardId, column, noteId);
     });
 
     logMemoryUsage();
+    logOpenFileHandles();
   }
 
   private String truncateNoteText(final String text) {

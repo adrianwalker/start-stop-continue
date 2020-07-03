@@ -57,7 +57,7 @@ public class RestService {
     final UUID boardId) {
 
     service.lockBoard(boardId);
-    
+
     return Response.ok(new ID().setId(boardId)).build();
   }
 

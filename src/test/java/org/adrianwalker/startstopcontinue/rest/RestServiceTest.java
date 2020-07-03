@@ -59,8 +59,8 @@ public final class RestServiceTest {
       .setContinues(continues));
 
     service = new Service(
-      dataAccess, 
-      new NonCachingCache(boardId -> dataAccess.readBoard(boardId)), 
+      dataAccess,
+      new NonCachingCache(boardId -> dataAccess.readBoard(boardId)),
       executorService, 0);
   }
 

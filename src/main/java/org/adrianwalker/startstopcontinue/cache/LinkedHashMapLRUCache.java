@@ -114,6 +114,16 @@ public final class LinkedHashMapLRUCache implements Cache {
   }
 
   @Override
+  public void unlock(final UUID boardId) {
+
+    if (!cache.containsKey(boardId)) {
+      read(boardId);
+    }
+
+    cache.get(boardId).setLocked(false);
+  }
+
+  @Override
   public Note read(final UUID boardId, final Column column, final UUID noteId) {
 
     if (!cache.containsKey(boardId)) {

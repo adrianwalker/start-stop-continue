@@ -63,7 +63,7 @@ public final class EventSocket {
 
     UUID boardId = getBoardId(session);
     SESSIONS.get(boardId).remove(session);
-    
+
     if (SESSIONS.get(boardId).isEmpty()) {
       SESSIONS.remove(boardId);
     }

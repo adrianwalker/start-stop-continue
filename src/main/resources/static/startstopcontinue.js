@@ -114,7 +114,7 @@ $(document).ready(function () {
       setBoardLocked(true);
       sendEvent({
         id: data.id,
-        lock: true
+        locked: true
       });
 
     }).fail(handleFailure);
@@ -378,8 +378,10 @@ $(document).ready(function () {
 
   function handleBoardLockEvent(event) {
 
-    if (!boardLocked && event.lock) {
+    if (!boardLocked && event.locked) {
       setBoardLocked(true);
+    } else if (boardLocked && !event.locked) {
+      setBoardLocked(false);
     }
   }
 

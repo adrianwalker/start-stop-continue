@@ -63,6 +63,12 @@ public abstract class FileSystemDataAccess implements DataAccess {
   }
 
   @Override
+  public void unlockBoard(final UUID boardId) {
+
+    deleteLock(boardId);
+  }
+
+  @Override
   public void createNote(final UUID boardId, final Column column, final Note note) {
 
     writeNote(notePath(boardId, column, note.getId()), note);
@@ -114,10 +120,10 @@ public abstract class FileSystemDataAccess implements DataAccess {
     }
   }
 
-  private List<Path> filesList(final Path path) {
+  private Stream<Path> filesList(final Path path) {
 
     try ( Stream<Path> stream = Files.list(path)) {
-      return stream.collect(toList());
+      return stream.collect(toList()).stream().parallel();
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }
@@ -137,8 +143,8 @@ public abstract class FileSystemDataAccess implements DataAccess {
       ).map(
         columnNotePaths -> entry(
           columnNotePaths.getKey(),
-          columnNotePaths.getValue().stream().map(
-            notePath -> readNote(notePath)))
+          columnNotePaths.getValue()
+            .map(notePath -> readNote(notePath)))
       ).collect(toMap(
         entry -> entry.getKey(),
         entry -> entry.getValue()
@@ -161,6 +167,17 @@ public abstract class FileSystemDataAccess implements DataAccess {
 
     try {
       Files.createFile(lockPath);
+    } catch (final IOException ioe) {
+      throw new RuntimeException(ioe);
+    }
+  }
+
+  private void deleteLock(final UUID boardId) {
+
+    Path lockPath = boardPath(boardId).resolve(LOCK);
+
+    try {
+      Files.deleteIfExists(lockPath);
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }

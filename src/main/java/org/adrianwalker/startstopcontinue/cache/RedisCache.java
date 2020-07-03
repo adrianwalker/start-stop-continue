@@ -81,6 +81,16 @@ public final class RedisCache implements Cache {
   }
 
   @Override
+  public void unlock(final UUID boardId) {
+
+    if (!exists(boardId.toString())) {
+      read(boardId);
+    }
+
+    writeLock(boardId, false);
+  }
+
+  @Override
   public Note read(final UUID boardId, final Column column, final UUID noteId) {
 
     if (!exists(boardId.toString())) {
@@ -130,7 +140,7 @@ public final class RedisCache implements Cache {
 
     return combined;
   }
-  
+
   private void writeLock(final UUID boardId, final boolean locked) {
 
     hset(boardId.toString(), LOCKED, String.valueOf(locked));
@@ -192,7 +202,7 @@ public final class RedisCache implements Cache {
   private Board fromCache(final UUID boardId) {
 
     Map<String, String> hash = hgetAll(boardId.toString());
-    
+
     boolean locked = Boolean.valueOf(hash.remove(LOCKED));
     Map<Column, List<Note>> columns = hash.entrySet().stream().collect(NOTE_COLLECTOR);
 
@@ -212,7 +222,7 @@ public final class RedisCache implements Cache {
   private void toCache(final UUID boardId, final Board board) {
 
     Map<String, String> hash = new HashMap<>();
-    
+
     String locked = String.valueOf(board.isLocked());
     hash.put(LOCKED, locked);
 

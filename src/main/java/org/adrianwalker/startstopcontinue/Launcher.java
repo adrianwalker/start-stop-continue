@@ -1,9 +1,10 @@
 package org.adrianwalker.startstopcontinue;
 
+import org.adrianwalker.startstopcontinue.cli.CommandLineInterface;
+import java.util.concurrent.ExecutorService;
 import org.adrianwalker.startstopcontinue.pubsub.EventPubSubFactory;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccessFactory;
 import org.adrianwalker.startstopcontinue.cache.CacheFactory;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import javax.websocket.server.ServerEndpointConfig;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
@@ -24,6 +25,7 @@ import org.eclipse.jetty.websocket.jsr356.server.ServerContainer;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.adrianwalker.startstopcontinue.cache.Cache;
+import org.adrianwalker.startstopcontinue.cli.commands.Unlock;
 import org.adrianwalker.startstopcontinue.configuration.Configuration;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
@@ -50,6 +52,8 @@ public final class Launcher {
     EventPubSub eventPubSub = createPubSub(config);
     Service service = createService(config, dataAccess, cache);
     Server server = createServer(config);
+    CommandLineInterface cli = createCli(config, service, eventPubSub);
+
     ServletContextHandler context = createContext(CONTEXT_PATH, BASE_RESOURCE, WELCOME_FILES);
 
     addRestServlet(context, service);
@@ -59,6 +63,8 @@ public final class Launcher {
 
     server.setHandler(enableCompression(context));
     server.start();
+
+    cli.start();
   }
 
   private static EventPubSub createPubSub(final Configuration config) {
@@ -99,6 +105,13 @@ public final class Launcher {
     server.setConnectors(new Connector[]{connector});
 
     return server;
+  }
+
+  private static CommandLineInterface createCli(
+    final Configuration config, final Service service, final EventPubSub eventPubSub) {
+
+    return new CommandLineInterface(config.getCommandLineInterfaceConfiguration().getHttpPort())
+      .addCommand(new Unlock(service, eventPubSub));
   }
 
   private static ServletContextHandler createContext(

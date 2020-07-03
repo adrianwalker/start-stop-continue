@@ -15,7 +15,7 @@ public final class PubSubConfiguration {
   public static final String DEFAULT_PUBSUB_HOSTNAME = "";
   public static final String DEFAULT_PUBSUB_PORT = "0";
   public static final String DEFAULT_PUBSUB_PASSWORD = "";
-  
+
   public String getPubSubHostname() {
 
     return System.getenv().getOrDefault(PUBSUB_HOSTNAME, DEFAULT_PUBSUB_HOSTNAME);

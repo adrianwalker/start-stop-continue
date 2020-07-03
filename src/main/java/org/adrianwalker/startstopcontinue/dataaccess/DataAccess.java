@@ -10,8 +10,10 @@ public interface DataAccess {
   void createBoard(UUID boardId);
 
   Board readBoard(UUID boardId);
-  
+
   void lockBoard(UUID boardId);
+
+  void unlockBoard(UUID boardId);
 
   void createNote(UUID boardId, Column column, Note note);
 

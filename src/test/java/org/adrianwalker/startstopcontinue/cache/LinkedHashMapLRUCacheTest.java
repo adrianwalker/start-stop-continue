@@ -20,7 +20,7 @@ public final class LinkedHashMapLRUCacheTest {
       .setStarts(new ArrayList<>())
       .setStops(new ArrayList<>())
       .setContinues(new ArrayList<>()));
-    
+
     Board board = cache.read(id1);
     assertEquals(id1, board.getId());
 
@@ -60,10 +60,10 @@ public final class LinkedHashMapLRUCacheTest {
       .setStops(new ArrayList<>())
       .setContinues(new ArrayList<>()));
 
-    for (UUID boardId : boardIds) {     
+    for (UUID boardId : boardIds) {
       assertEquals(boardId, cache.read(boardId).getId());
     }
-    
+
     cache.read(boardIds[0], Column.CONTINUE, UUID.randomUUID());
     cache.write(boardIds[1], Column.START, new Note().setId(UUID.randomUUID()));
     cache.delete(boardIds[2], Column.START, UUID.randomUUID());
@@ -93,7 +93,7 @@ public final class LinkedHashMapLRUCacheTest {
     assertEquals(id1, cache.read(id4, Column.START, id1).getId());
     assertEquals(id2, cache.read(id4, Column.STOP, id2).getId());
     assertEquals(id3, cache.read(id4, Column.CONTINUE, id3).getId());
-   
+
     cache.delete(id4, Column.START, id1);
     cache.delete(id4, Column.STOP, id2);
     cache.delete(id4, Column.CONTINUE, id3);

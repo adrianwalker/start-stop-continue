@@ -44,7 +44,7 @@ public final class WebServlet extends HttpServlet {
   private byte[] readTemplate(final String boardId) throws IOException {
 
     byte[] b;
-    try (InputStream is = getClass().getResourceAsStream(TEMPLATE)) {
+    try ( InputStream is = getClass().getResourceAsStream(TEMPLATE)) {
 
       b = is.readAllBytes();
     }
@@ -84,7 +84,7 @@ public final class WebServlet extends HttpServlet {
     response.setContentType(MediaType.TEXT_HTML);
     response.setContentLength(html.length);
 
-    try (OutputStream os = response.getOutputStream()) {
+    try ( OutputStream os = response.getOutputStream()) {
 
       os.write(html);
       os.flush();

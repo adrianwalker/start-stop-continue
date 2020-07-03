@@ -8,8 +8,10 @@ import org.adrianwalker.startstopcontinue.model.Note;
 public interface Cache {
 
   Board read(UUID boardId);
-  
+
   void lock(UUID boardId);
+
+  void unlock(UUID boardId);
 
   Note read(UUID boardId, Column column, UUID noteId);
 

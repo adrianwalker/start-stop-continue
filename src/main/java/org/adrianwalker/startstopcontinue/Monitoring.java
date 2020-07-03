@@ -1,6 +1,9 @@
 package org.adrianwalker.startstopcontinue;
 
+import com.sun.management.UnixOperatingSystemMXBean;
 import static java.lang.String.format;
+import java.lang.management.ManagementFactory;
+import java.lang.management.OperatingSystemMXBean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,5 +29,17 @@ public final class Monitoring {
       format("%.2f", freeMemory),
       format("%.2f", totalMemory),
       format("%.2f", maxMemory));
+  }
+
+  public static void logOpenFileHandles() {
+
+    OperatingSystemMXBean os = ManagementFactory.getOperatingSystemMXBean();
+
+    if (os instanceof UnixOperatingSystemMXBean) {
+      UnixOperatingSystemMXBean uos = ((UnixOperatingSystemMXBean) os);
+      long openFileDescriptors = uos.getOpenFileDescriptorCount();
+
+      LOGGER.info("openFileDescriptors = {}", openFileDescriptors);
+    }
   }
 }

@@ -72,6 +72,12 @@ public final class MinioDataAccess implements DataAccess {
   }
 
   @Override
+  public void unlockBoard(UUID boardId) {
+
+    deleteLock(lockName(boardId));
+  }
+
+  @Override
   public void createNote(final UUID boardId, final Column column, final Note note) {
 
     writeNote(noteName(boardId, column, note.getId()), note);
@@ -190,9 +196,25 @@ public final class MinioDataAccess implements DataAccess {
     writeObject(name, Collections.EMPTY_MAP);
   }
 
+  private void deleteLock(final String name) {
+
+    deleteObject(name);
+  }
+
   private void writeNote(final String name, final Note note) {
 
     writeObject(name, note);
+  }
+
+  private Note readNote(final String name) {
+
+    try ( InputStream is = minioClient.getObject(this.bucketName, name)) {
+
+      return OBJECT_MAPPER.readValue(is, Note.class);
+
+    } catch (final Exception e) {
+      throw new RuntimeException(e);
+    }
   }
 
   private void writeObject(final String name, final Object obj) {
@@ -208,12 +230,10 @@ public final class MinioDataAccess implements DataAccess {
     }
   }
 
-  private Note readNote(final String name) {
+  private void deleteObject(final String name) {
 
-    try ( InputStream is = minioClient.getObject(this.bucketName, name)) {
-
-      return OBJECT_MAPPER.readValue(is, Note.class);
-
+    try {
+      minioClient.removeObject(this.bucketName, name);
     } catch (final Exception e) {
       throw new RuntimeException(e);
     }
