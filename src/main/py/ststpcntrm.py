@@ -14,10 +14,15 @@ DELETE_TEXT = [
     START,
     STOP,
     CONTINUE]
+LOCK = 'lock'
 
 for root, dirs, files in os.walk(DATA_DIR, topdown=False):
 
     for name in files:
+
+        if name == LOCK:
+          continue
+
         path = os.path.join(root, name)
         with open(path) as f:
             text = json.loads(f.read()).get(TEXT, EMPTY).strip().upper()
