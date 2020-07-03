@@ -81,27 +81,30 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-assembly-plugin</artifactId>
-        <configuration>
-          <finalName>${project.artifactId}</finalName>
-          <archive>
-            <manifest>
-              <mainClass>org.adrianwalker.startstopcontinue.Launcher</mainClass>
-            </manifest>
-          </archive>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
-        </configuration>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-shade-plugin</artifactId>
+        <version>3.2.4</version>
         <executions>
           <execution>
-            <id>make-assembly</id>
             <phase>package</phase>
             <goals>
-              <goal>single</goal>
+              <goal>shade</goal>
             </goals>
+            <configuration>
+              <minimizeJar>true</minimizeJar>
+            </configuration>
           </execution>
         </executions>
+        <configuration>
+          <transformers>
+            <transformer implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+              <manifestEntries>
+                <Main-Class>org.adrianwalker.startstopcontinue.Launcher</Main-Class>
+              </manifestEntries>
+            </transformer>
+          </transformers>
+          <finalName>${artifactId}-jar-with-dependencies</finalName>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>net.alchim31.maven</groupId>
