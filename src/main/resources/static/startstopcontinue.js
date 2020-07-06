@@ -6,9 +6,11 @@ var UUID = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
 
 function uuid() {
 
-  var dt = new Date().getTime();
-  var uuid = UUID.replace(/[xy]/g, function (c) {
-    var r = (dt + Math.random() * 16) % 16 | 0;
+  var dt, uuid, r;
+
+  dt = new Date().getTime();
+  uuid = UUID.replace(/[xy]/g, function (c) {
+    r = (dt + Math.random() * 16) % 16 | 0;
     dt = Math.floor(dt / 16);
     return (c === 'x' ? r : (r & 0x3 | 0x8)).toString(16);
   });
@@ -30,16 +32,18 @@ if (!String.prototype.endsWith) {
 
 $(document).ready(function () {
 
-  var _TEMP = "_temp";
-  var COLUMNS = {
+  var _TEMP, COLUMNS, boardLocked, webSocket;
+
+  _TEMP = "_temp";
+  COLUMNS = {
     "START": $("#start-list"),
     "STOP": $("#stop-list"),
     "CONTINUE": $("#continue-list")
   };
 
-  var boardLocked = false;
+  boardLocked = false;
 
-  var webSocket = createWebSocket(function () {
+  webSocket = createWebSocket(function () {
     loadBoard(boardId);
   });
 
@@ -158,8 +162,10 @@ $(document).ready(function () {
     COLUMNS[column].append(noteHtml(note.id, note.color, note.text));
     COLUMNS[column].on('change', '#' + note.id + ' > textarea', function () {
 
-      var text = $("#" + note.id + " > textarea").val().trim();
-      var serverId = $("#" + note.id).attr("server-id");
+      var text, serverId;
+
+      text = $("#" + note.id + " > textarea").val().trim();
+      serverId = $("#" + note.id).attr("server-id");
 
       if (text === "" && serverId.endsWith(_TEMP)) {
         onRemove(note);
@@ -176,8 +182,8 @@ $(document).ready(function () {
   function noteHtml(id, color, text) {
 
     return '<li id="' + id + '" server-id="' + id + '" style="background-color: ' + color + '">'
-            + '  <textarea>' + text + '</textarea>'
-            + '</li>';
+        + '  <textarea>' + text + '</textarea>'
+        + '</li>';
   }
 
   function onRemove(note) {
@@ -298,8 +304,10 @@ $(document).ready(function () {
 
   function createWebSocket(callback) {
 
-    var url = "ws://" + window.location.host + window.location.pathname + "events/" + boardId;
-    var webSocket = new WebSocket(url);
+    var url, webSocket;
+
+    url = "ws://" + window.location.host + window.location.pathname + "events/" + boardId;
+    webSocket = new WebSocket(url);
 
     webSocket.onopen = function (event) {
       callback();
@@ -409,7 +417,7 @@ $(document).ready(function () {
 
   function handleFailure(jqXHR, textStatus, errorThrown) {
 
-    var message;
+    var message, error;
 
     if (jqXHR) {
       message = jqXHR.responseText;
@@ -425,7 +433,7 @@ $(document).ready(function () {
 
     $("#error textarea").val("ERROR\n\n" + message);
 
-    var error = $("#error");
+    error = $("#error");
     error.show();
     error.click(function () {
       error.hide();
