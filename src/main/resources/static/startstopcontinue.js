@@ -113,7 +113,7 @@ $(document).ready(function () {
 
       setBoardLocked(true);
       sendEvent({
-        id: data.id,
+        boardId: boardId,
         locked: true
       });
 
@@ -358,8 +358,8 @@ $(document).ready(function () {
 
     if ('note' in event) {
       handleNoteEvent(event);
-    } else if ('lock') {
-      handleBoardLockEvent(event);
+    } else if ('locked' in event) {
+      handleLockedEvent(event);
     }
   }
 
@@ -376,7 +376,7 @@ $(document).ready(function () {
     }
   }
 
-  function handleBoardLockEvent(event) {
+  function handleLockedEvent(event) {
 
     if (!boardLocked && event.locked) {
       setBoardLocked(true);

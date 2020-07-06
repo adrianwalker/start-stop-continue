@@ -38,7 +38,7 @@ public final class Unlock implements Command {
 
     eventPubSub.publish(boardId, new Event()
       .setId(boardId.toString())
-      .setData(toJson(of("id", boardId.toString(), "locked", locked))));
+      .setData(toJson(of("boardId", boardId.toString(), "locked", locked))));
 
     return format("board %s is %s", boardId, locked ? "locked" : "unlocked");
   }
