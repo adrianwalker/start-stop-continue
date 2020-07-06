@@ -6,6 +6,7 @@ import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Collection;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.Scanner;
@@ -18,18 +19,21 @@ public final class CommandLineInterface {
   public static final String PROMPT = "> ";
 
   private final int port;
-  private final Map<String, Command> commandInstances;
+  private final Map<String, Command> commands;
 
   public CommandLineInterface(final int port) {
 
     this.port = port;
+    this.commands = new HashMap<>();
+  }
 
-    commandInstances = new HashMap<>();
+  public Collection<Command> getCommands() {
+    return commands.values();
   }
 
   public CommandLineInterface addCommand(final Command command) {
 
-    commandInstances.put(command.name(), command);
+    commands.put(command.name(), command);
 
     return this;
   }
@@ -102,9 +106,9 @@ public final class CommandLineInterface {
       return null;
     }
 
-    if (commandInstances.containsKey(command[0])) {
+    if (commands.containsKey(command[0])) {
       try {
-        return commandInstances.get(command[0]).eval(command);
+        return commands.get(command[0]).eval(command);
       } catch (final Exception e) {
         return e.getMessage();
       }

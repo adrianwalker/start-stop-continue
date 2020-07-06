@@ -5,12 +5,12 @@ import java.util.Date;
 import java.util.UUID;
 import java.util.concurrent.ExecutorService;
 import static org.adrianwalker.startstopcontinue.Monitoring.logMemoryUsage;
-import static org.adrianwalker.startstopcontinue.Monitoring.logOpenFileHandles;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 import org.adrianwalker.startstopcontinue.cache.Cache;
+import static org.adrianwalker.startstopcontinue.Monitoring.logFileDescriptors;
 
 public final class Service {
 
@@ -33,7 +33,7 @@ public final class Service {
     dataAccess.createBoard(boardId);
 
     logMemoryUsage();
-    logOpenFileHandles();
+    logFileDescriptors();
 
     return boardId;
   }
@@ -43,7 +43,7 @@ public final class Service {
     Board board = cache.read(boardId);
 
     logMemoryUsage();
-    logOpenFileHandles();
+    logFileDescriptors();
 
     return board;
   }
@@ -58,7 +58,7 @@ public final class Service {
     });
 
     logMemoryUsage();
-    logOpenFileHandles();
+    logFileDescriptors();
   }
 
   public final void unlockBoard(final UUID boardId) {
@@ -69,7 +69,7 @@ public final class Service {
     });
 
     logMemoryUsage();
-    logOpenFileHandles();
+    logFileDescriptors();
   }
 
   public final void createNote(final UUID boardId, final Column column, final Note note) {
@@ -86,7 +86,7 @@ public final class Service {
     });
 
     logMemoryUsage();
-    logOpenFileHandles();
+    logFileDescriptors();
   }
 
   public final void updateNote(final UUID boardId, final Column column, final Note data) {
@@ -102,7 +102,7 @@ public final class Service {
     });
 
     logMemoryUsage();
-    logOpenFileHandles();
+    logFileDescriptors();
   }
 
   public final void deleteNote(final UUID boardId, final Column column, final UUID noteId) {
@@ -115,7 +115,7 @@ public final class Service {
     });
 
     logMemoryUsage();
-    logOpenFileHandles();
+    logFileDescriptors();
   }
 
   private String truncateNoteText(final String text) {
