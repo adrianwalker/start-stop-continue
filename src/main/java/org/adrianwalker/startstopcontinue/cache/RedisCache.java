@@ -121,6 +121,18 @@ public final class RedisCache implements Cache {
     hdel(boardId.toString(), noteField(column, noteId));
   }
 
+  @Override
+  public long size() {
+    
+    return dbsize();
+  }
+
+  @Override
+  public void purge() {
+    
+    flushdb();
+  }
+
   private static String fieldHead(final String noteField) {
 
     return noteField.substring(0, noteField.indexOf(FIELD_SEPERATOR));
@@ -197,6 +209,16 @@ public final class RedisCache implements Cache {
   private void hdel(final String key, final String... members) {
 
     redisConnection.async().hdel(key, members);
+  }
+
+  private long dbsize() {
+
+    return redisConnection.sync().dbsize();
+  }
+
+  private void flushdb() {
+
+    redisConnection.async().flushdb();
   }
 
   private Board fromCache(final UUID boardId) {

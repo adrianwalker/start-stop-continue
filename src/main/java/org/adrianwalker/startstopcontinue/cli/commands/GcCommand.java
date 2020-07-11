@@ -1,6 +1,6 @@
 package org.adrianwalker.startstopcontinue.cli.commands;
 
-public final class Gc implements Command {
+public final class GcCommand implements Command {
 
   @Override
   public String name() {

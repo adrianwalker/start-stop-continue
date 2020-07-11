@@ -18,4 +18,8 @@ public interface Cache {
   void write(UUID boardId, Column column, Note note);
 
   void delete(UUID boardId, Column column, UUID noteId);
+
+  long size();
+
+  void purge();
 }

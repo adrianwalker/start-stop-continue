@@ -156,6 +156,18 @@ public final class LinkedHashMapLRUCache implements Cache {
     cache.get(boardId).getData().get(column).remove(noteId);
   }
 
+  @Override
+  public long size() {
+    
+    return cache.size();
+  }
+
+  @Override
+  public void purge() {
+    
+    cache.clear();
+  }
+
   private Board fromCache(final UUID boardId) {
 
     CacheEntry cacheEntry = cache.get(boardId);

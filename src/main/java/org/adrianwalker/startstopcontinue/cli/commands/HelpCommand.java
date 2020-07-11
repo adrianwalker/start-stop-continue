@@ -3,11 +3,11 @@ package org.adrianwalker.startstopcontinue.cli.commands;
 import static java.util.stream.Collectors.joining;
 import org.adrianwalker.startstopcontinue.cli.CommandLineInterface;
 
-public final class Help implements Command {
+public final class HelpCommand implements Command {
 
   private final CommandLineInterface cli;
 
-  public Help(final CommandLineInterface cli) {
+  public HelpCommand(final CommandLineInterface cli) {
 
     this.cli = cli;
   }

@@ -135,4 +135,14 @@ public final class Service {
       throw new RuntimeException("This board is locked for editing");
     }
   }
+
+  public long cacheSize() {
+    
+    return cache.size();
+  }
+
+  public void cachePurge() {
+    
+    cache.purge();
+  }
 }

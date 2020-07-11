@@ -6,7 +6,7 @@ import java.util.stream.Stream;
 import static org.adrianwalker.startstopcontinue.Monitoring.memoryUsage;
 import static org.adrianwalker.startstopcontinue.Monitoring.fileDescriptors;
 
-public final class Monitoring implements Command {
+public final class MonitoringCommand implements Command {
 
   @Override
   public String name() {

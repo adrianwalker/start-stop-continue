@@ -25,10 +25,11 @@ import org.eclipse.jetty.websocket.jsr356.server.ServerContainer;
 import org.eclipse.jetty.websocket.jsr356.server.deploy.WebSocketServerContainerInitializer;
 import org.glassfish.jersey.servlet.ServletContainer;
 import org.adrianwalker.startstopcontinue.cache.Cache;
-import org.adrianwalker.startstopcontinue.cli.commands.Gc;
-import org.adrianwalker.startstopcontinue.cli.commands.Help;
-import org.adrianwalker.startstopcontinue.cli.commands.Unlock;
-import org.adrianwalker.startstopcontinue.cli.commands.Monitoring;
+import org.adrianwalker.startstopcontinue.cli.commands.CacheCommand;
+import org.adrianwalker.startstopcontinue.cli.commands.GcCommand;
+import org.adrianwalker.startstopcontinue.cli.commands.HelpCommand;
+import org.adrianwalker.startstopcontinue.cli.commands.MonitoringCommand;
+import org.adrianwalker.startstopcontinue.cli.commands.UnlockCommand;
 import org.adrianwalker.startstopcontinue.configuration.Configuration;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.handler.gzip.GzipHandler;
@@ -117,10 +118,11 @@ public final class Launcher {
     CommandLineInterface cli = new CommandLineInterface(port);
 
     return cli
-      .addCommand(new Help(cli))
-      .addCommand(new Monitoring())
-      .addCommand(new Gc())
-      .addCommand(new Unlock(service, eventPubSub));
+      .addCommand(new HelpCommand(cli))
+      .addCommand(new MonitoringCommand())
+      .addCommand(new UnlockCommand(service, eventPubSub))
+      .addCommand(new CacheCommand(service))
+      .addCommand(new GcCommand());
   }
 
   private static ServletContextHandler createContext(
