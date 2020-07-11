@@ -103,7 +103,7 @@
               </manifestEntries>
             </transformer>
           </transformers>
-          <finalName>${{project.artifactId}-jar-with-dependencies</finalName>
+          <finalName>${project.artifactId}-jar-with-dependencies</finalName>
         </configuration>
       </plugin>
       <plugin>
