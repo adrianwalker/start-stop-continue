@@ -6,7 +6,9 @@ import java.io.OutputStream;
 import static java.lang.String.format;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import static java.util.Map.of;
 import java.util.UUID;
+import java.util.regex.Pattern;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -22,6 +24,9 @@ public final class WebServlet extends HttpServlet {
   private static final String TEMPLATE = "/static/index.html";
   private static final float LOAD_FACTOR = 0.75f;
   private static final boolean ACCESS_ORDER = true;
+  private static final Map<Pattern, String> HTML_MINIFY = of(
+    Pattern.compile(">\\s+<"), "><"
+  );
 
   private final Service service;
   private final Map<String, byte[]> cache;
@@ -43,15 +48,28 @@ public final class WebServlet extends HttpServlet {
 
   private byte[] readTemplate(final String boardId) throws IOException {
 
-    byte[] b;
-    try ( InputStream is = getClass().getResourceAsStream(TEMPLATE)) {
+    String html;
+    try (InputStream is = getClass().getResourceAsStream(TEMPLATE)) {
 
-      b = is.readAllBytes();
+      html = new String(is.readAllBytes());
     }
 
-    String html = new String(b).replace(BOARD_ID_TOKEN, boardId);
+    return minify(substitute(html, boardId)).getBytes();
+  }
 
-    return html.getBytes();
+  public String substitute(final String html, final String boardId) {
+
+    return html.replace(BOARD_ID_TOKEN, boardId);
+  }
+
+  public String minify(final String html) {
+
+    String minifiedHtml = html;
+    for (Map.Entry<Pattern, String> minify : HTML_MINIFY.entrySet()) {
+      minifiedHtml = minify.getKey().matcher(minifiedHtml).replaceAll(minify.getValue());
+    }
+
+    return minifiedHtml;
   }
 
   @Override
@@ -84,7 +102,7 @@ public final class WebServlet extends HttpServlet {
     response.setContentType(MediaType.TEXT_HTML);
     response.setContentLength(html.length);
 
-    try ( OutputStream os = response.getOutputStream()) {
+    try (OutputStream os = response.getOutputStream()) {
 
       os.write(html);
       os.flush();

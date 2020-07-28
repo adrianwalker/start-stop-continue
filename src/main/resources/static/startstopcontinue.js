@@ -30,7 +30,7 @@ if (!String.prototype.endsWith) {
   };
 }
 
-$(document).ready(function () {
+$(function () {
 
   var _TEMP, COLUMNS, boardLocked, webSocket;
 

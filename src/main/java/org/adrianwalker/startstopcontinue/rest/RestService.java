@@ -1,7 +1,7 @@
 package org.adrianwalker.startstopcontinue.rest;
 
-import java.util.HashMap;
 import java.util.Map;
+import static java.util.Map.of;
 import java.util.UUID;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.DELETE;
@@ -21,12 +21,10 @@ import org.adrianwalker.startstopcontinue.service.Service;
 @Path("")
 public class RestService {
 
-  private static final Map<String, String> HTML_ESCAPE = new HashMap<>();
-
-  static {
-    HTML_ESCAPE.put("<", "&lt;");
-    HTML_ESCAPE.put(">", "&gt;");
-  }
+  private static final Map<String, String> HTML_ESCAPE = of(
+    "<", "&lt;",
+    ">", "&gt;"
+  );
 
   private final Service service;
 
