@@ -9,7 +9,6 @@ import javax.ws.rs.core.Response;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
-import org.adrianwalker.startstopcontinue.model.ID;
 import org.adrianwalker.startstopcontinue.model.Note;
 import org.adrianwalker.startstopcontinue.service.Service;
 import org.junit.Before;
@@ -20,6 +19,8 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.when;
 import org.mockito.MockitoAnnotations;
 import org.adrianwalker.startstopcontinue.cache.NonCachingCache;
+import org.adrianwalker.startstopcontinue.pubsub.EventPubSub;
+import org.adrianwalker.startstopcontinue.pubsub.HashSetEventPubSub;
 
 public final class RestServiceTest {
 
@@ -32,8 +33,8 @@ public final class RestServiceTest {
 
   @Mock
   private DataAccess dataAccess;
-
   private ExecutorService executorService;
+  private EventPubSub eventPubSub;
 
   private Service service;
 
@@ -42,6 +43,8 @@ public final class RestServiceTest {
 
     MockitoAnnotations.initMocks(this);
     executorService = Executors.newFixedThreadPool(THREADS);
+
+    eventPubSub = new HashSetEventPubSub();
 
     List<Note> starts = new ArrayList<>();
     starts.add(new Note().setId(NOTE_ID_1).setColor("#ffffff").setText("Start"));
@@ -61,7 +64,8 @@ public final class RestServiceTest {
     service = new Service(
       dataAccess,
       new NonCachingCache(boardId -> dataAccess.readBoard(boardId)),
-      executorService, 0);
+      executorService, eventPubSub,
+      0);
   }
 
   @Test
@@ -89,10 +93,10 @@ public final class RestServiceTest {
     Response response = restService.createNote(
       BOARD_ID, Column.START, new Note().setText("Start"));
 
-    ID id = (ID) response.getEntity();
+    Note note = (Note) response.getEntity();
 
-    assertNotNull(id);
-    assertTrue(id.getId() instanceof UUID);
+    assertNotNull(note);
+    assertTrue(note.getId() instanceof UUID);
   }
 
   @Test
@@ -102,10 +106,10 @@ public final class RestServiceTest {
     Response response = restService.updateNote(
       BOARD_ID, Column.START, new Note().setId(NOTE_ID_1).setText("Update"));
 
-    ID id = (ID) response.getEntity();
+    Note note = (Note) response.getEntity();
 
-    assertNotNull(id);
-    assertEquals(NOTE_ID_1, id.getId());
+    assertNotNull(note);
+    assertEquals(NOTE_ID_1, note.getId());
   }
 
   @Test
@@ -114,9 +118,9 @@ public final class RestServiceTest {
     RestService restService = new RestService(service);
     Response response = restService.deleteNote(BOARD_ID, Column.START, NOTE_ID_1);
 
-    ID id = (ID) response.getEntity();
+    Note note = (Note) response.getEntity();
 
-    assertNotNull(id);
-    assertEquals(NOTE_ID_1, id.getId());
+    assertNotNull(note);
+    assertEquals(NOTE_ID_1, note.getId());
   }
 }

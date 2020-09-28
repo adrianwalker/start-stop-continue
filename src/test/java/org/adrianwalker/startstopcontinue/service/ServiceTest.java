@@ -11,6 +11,8 @@ import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
+import org.adrianwalker.startstopcontinue.pubsub.EventPubSub;
+import org.adrianwalker.startstopcontinue.pubsub.HashSetEventPubSub;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import org.junit.Before;
@@ -34,14 +36,15 @@ public final class ServiceTest {
 
   @Mock
   private DataAccess dataAccess;
-
   private ExecutorService executorService;
+  private EventPubSub eventPubSub;
 
   @Before
   public void setUp() throws Exception {
 
     MockitoAnnotations.initMocks(this);
     executorService = Executors.newFixedThreadPool(THREADS);
+    eventPubSub = new HashSetEventPubSub();
 
     List<Note> starts = new ArrayList<>();
     starts.add(new Note().setId(NOTE_ID_1).setColor("#ffffff").setText("Start"));
@@ -65,7 +68,8 @@ public final class ServiceTest {
     Service service = new Service(
       dataAccess,
       new NonCachingCache(boardId -> dataAccess.readBoard(boardId)),
-      executorService, 0);
+      executorService, eventPubSub,
+      0);
     UUID boardId = service.createBoard();
     assertNotNull(boardId);
   }
@@ -76,7 +80,8 @@ public final class ServiceTest {
     Service service = new Service(
       dataAccess,
       new NonCachingCache(boardId -> dataAccess.readBoard(boardId)),
-      executorService, 0);
+      executorService, eventPubSub,
+      0);
     Board board = service.readBoard(BOARD_ID);
     assertNotNull(board);
     assertEquals(BOARD_ID, board.getId());
@@ -102,7 +107,8 @@ public final class ServiceTest {
     Service service = new Service(
       dataAccess,
       new NonCachingCache(boardId -> dataAccess.readBoard(boardId)),
-      executorService, maxNoteLength);
+      executorService, eventPubSub,
+      maxNoteLength);
     service.createNote(BOARD_ID, Column.START, new Note().setColor("#ffffff").setText("Start"));
     service.createNote(BOARD_ID, Column.STOP, new Note().setColor("#ffffff").setText("Stop"));
     service.createNote(BOARD_ID, Column.CONTINUE, new Note().setColor("#ffffff").setText("Continue"));
@@ -150,7 +156,8 @@ public final class ServiceTest {
     Service service = new Service(
       dataAccess,
       new NonCachingCache(boardId -> dataAccess.readBoard(boardId)),
-      executorService, 0);
+      executorService, eventPubSub,
+      0);
     service.updateNote(BOARD_ID, Column.START, new Note().setId(NOTE_ID_1).setText("Start"));
     service.updateNote(BOARD_ID, Column.STOP, new Note().setId(NOTE_ID_2).setText("Stop"));
     service.updateNote(BOARD_ID, Column.CONTINUE, new Note().setId(NOTE_ID_3).setText("Continue"));
@@ -184,7 +191,8 @@ public final class ServiceTest {
     Service service = new Service(
       dataAccess,
       new NonCachingCache(boardId -> dataAccess.readBoard(boardId)),
-      executorService, 0);
+      executorService, eventPubSub,
+      0);
     service.deleteNote(BOARD_ID, Column.START, NOTE_ID_1);
     service.deleteNote(BOARD_ID, Column.STOP, NOTE_ID_2);
     service.deleteNote(BOARD_ID, Column.CONTINUE, NOTE_ID_3);

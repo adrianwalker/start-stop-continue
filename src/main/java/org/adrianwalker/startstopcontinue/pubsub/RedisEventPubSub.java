@@ -1,16 +1,13 @@
 package org.adrianwalker.startstopcontinue.pubsub;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.lettuce.core.pubsub.RedisPubSubAdapter;
 import io.lettuce.core.pubsub.StatefulRedisPubSubConnection;
-import java.io.IOException;
 import java.util.UUID;
 import java.util.function.BiConsumer;
+import static org.adrianwalker.startstopcontinue.util.JsonUtil.fromJson;
+import static org.adrianwalker.startstopcontinue.util.JsonUtil.toJson;
 
 public final class RedisEventPubSub implements EventPubSub {
-
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
 
   private final StatefulRedisPubSubConnection<String, String> publishConnection;
   private final StatefulRedisPubSubConnection<String, String> subscribeConnection;
@@ -38,11 +35,7 @@ public final class RedisEventPubSub implements EventPubSub {
   @Override
   public void publish(final UUID boardId, final Event event) {
 
-    try {
-      publishConnection.async().publish(boardId.toString(), OBJECT_MAPPER.writeValueAsString(event));
-    } catch (final JsonProcessingException jpe) {
-      throw new RuntimeException(jpe);
-    }
+    publishConnection.async().publish(boardId.toString(), toJson(event));
   }
 
   @Override
@@ -53,11 +46,7 @@ public final class RedisEventPubSub implements EventPubSub {
       @Override
       public void message(final String channel, final String message) {
 
-        try {
-          consumer.accept(UUID.fromString(channel), OBJECT_MAPPER.readValue(message, Event.class));
-        } catch (final IOException ioe) {
-          throw new RuntimeException(ioe);
-        }
+        consumer.accept(UUID.fromString(channel), fromJson(message, Event.class));
       }
     });
   }

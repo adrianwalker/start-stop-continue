@@ -1,9 +1,6 @@
 package org.adrianwalker.startstopcontinue.cache;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.lettuce.core.api.StatefulRedisConnection;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -19,13 +16,14 @@ import static java.util.stream.Collectors.toMap;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
+import static org.adrianwalker.startstopcontinue.util.JsonUtil.fromJson;
+import static org.adrianwalker.startstopcontinue.util.JsonUtil.toJson;
 import org.slf4j.LoggerFactory;
 
 public final class RedisCache implements Cache {
 
   private static final org.slf4j.Logger LOGGER = LoggerFactory.getLogger(RedisCache.class);
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   public static final String LOCKED = "locked";
   private static final String FIELD_SEPERATOR = "/";
   private static final List<Note> EMPTY_NOTES = Collections.EMPTY_LIST;
@@ -123,13 +121,13 @@ public final class RedisCache implements Cache {
 
   @Override
   public long size() {
-    
+
     return dbsize();
   }
 
   @Override
   public void purge() {
-    
+
     flushdb();
   }
 
@@ -160,20 +158,12 @@ public final class RedisCache implements Cache {
 
   private static Note readNote(final String value) {
 
-    try {
-      return OBJECT_MAPPER.readValue(value, Note.class);
-    } catch (final IOException ioe) {
-      throw new RuntimeException(ioe);
-    }
+    return fromJson(value, Note.class);
   }
 
   private String writeNote(final Note note) {
 
-    try {
-      return OBJECT_MAPPER.writeValueAsString(note);
-    } catch (final JsonProcessingException jpe) {
-      throw new RuntimeException(jpe);
-    }
+    return toJson(note);
   }
 
   private boolean exists(final String... keys) {

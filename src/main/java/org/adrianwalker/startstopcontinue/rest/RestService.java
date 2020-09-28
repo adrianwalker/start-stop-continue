@@ -13,9 +13,10 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
+import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Column;
-import org.adrianwalker.startstopcontinue.model.ID;
 import org.adrianwalker.startstopcontinue.model.Note;
+import org.adrianwalker.startstopcontinue.pubsub.Event;
 import org.adrianwalker.startstopcontinue.service.Service;
 
 @Path("")
@@ -56,7 +57,7 @@ public class RestService {
 
     service.lockBoard(boardId);
 
-    return Response.ok(new ID().setId(boardId)).build();
+    return Response.ok(new Board().setId(boardId)).build();
   }
 
   @POST
@@ -72,7 +73,7 @@ public class RestService {
 
     service.createNote(boardId, column, escapeHtml(note));
 
-    return Response.ok(new ID().setId(note.getId())).build();
+    return Response.ok(new Note().setId(note.getId())).build();
   }
 
   @PUT
@@ -88,7 +89,7 @@ public class RestService {
 
     service.updateNote(boardId, column, escapeHtml(note));
 
-    return Response.ok(new ID().setId(note.getId())).build();
+    return Response.ok(new Note().setId(note.getId())).build();
   }
 
   @DELETE
@@ -105,7 +106,21 @@ public class RestService {
 
     service.deleteNote(boardId, column, noteId);
 
-    return Response.ok(new ID().setId(noteId)).build();
+    return Response.ok(new Note().setId(noteId)).build();
+  }
+
+  @POST
+  @Consumes(MediaType.APPLICATION_JSON)
+  @Produces(MediaType.APPLICATION_JSON)
+  @Path("board/{boardId}/event")
+  public Response publishEvent(
+    @PathParam("boardId")
+    final UUID boardId,
+    final Event event) {
+
+    service.publishEvent(boardId, event);
+
+    return Response.ok().build();
   }
 
   private static Note escapeHtml(final Note note) {

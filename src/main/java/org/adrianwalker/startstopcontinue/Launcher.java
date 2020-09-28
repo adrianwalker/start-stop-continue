@@ -54,9 +54,9 @@ public final class Launcher {
     DataAccess dataAccess = createDataAccess(config);
     Cache cache = createCache(config, dataAccess);
     EventPubSub eventPubSub = createPubSub(config);
-    Service service = createService(config, dataAccess, cache);
+    Service service = createService(config, dataAccess, cache, eventPubSub);
     Server server = createServer(config);
-    CommandLineInterface cli = createCli(config, service, eventPubSub);
+    CommandLineInterface cli = createCli(config, service);
 
     ServletContextHandler context = createContext(CONTEXT_PATH, BASE_RESOURCE, WELCOME_FILES);
 
@@ -89,7 +89,9 @@ public final class Launcher {
   }
 
   private static Service createService(
-    final Configuration config, final DataAccess dataAccess, final Cache cache) {
+    final Configuration config,
+    final DataAccess dataAccess, final Cache cache,
+    final EventPubSub eventPubSub) {
 
     ExecutorService executorService = Executors.newFixedThreadPool(
       config.getDataConfiguration().getDataThreads());
@@ -98,6 +100,7 @@ public final class Launcher {
       dataAccess,
       cache,
       executorService,
+      eventPubSub,
       config.getDataConfiguration().getDataSize());
   }
 
@@ -112,7 +115,7 @@ public final class Launcher {
   }
 
   private static CommandLineInterface createCli(
-    final Configuration config, final Service service, final EventPubSub eventPubSub) {
+    final Configuration config, final Service service) {
 
     int port = config.getCommandLineInterfaceConfiguration().getHttpPort();
     CommandLineInterface cli = new CommandLineInterface(port);
@@ -120,7 +123,7 @@ public final class Launcher {
     return cli
       .addCommand(new HelpCommand(cli))
       .addCommand(new MonitoringCommand())
-      .addCommand(new UnlockCommand(service, eventPubSub))
+      .addCommand(new UnlockCommand(service))
       .addCommand(new CacheCommand(service))
       .addCommand(new GcCommand());
   }

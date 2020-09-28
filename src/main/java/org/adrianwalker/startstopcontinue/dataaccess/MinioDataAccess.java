@@ -1,6 +1,5 @@
 package org.adrianwalker.startstopcontinue.dataaccess;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import io.minio.ErrorCode;
 import io.minio.MinioClient;
 import io.minio.Result;
@@ -27,10 +26,11 @@ import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
 import static java.util.stream.Collectors.toList;
 import static java.util.stream.Collectors.toMap;
+import static org.adrianwalker.startstopcontinue.util.JsonUtil.fromJson;
+import static org.adrianwalker.startstopcontinue.util.JsonUtil.toJson;
 
 public final class MinioDataAccess implements DataAccess {
 
-  private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
   private static final String NAME_DELIMITER = "/";
   private static final String LOCK = "lock";
   private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
@@ -208,9 +208,9 @@ public final class MinioDataAccess implements DataAccess {
 
   private Note readNote(final String name) {
 
-    try ( InputStream is = minioClient.getObject(this.bucketName, name)) {
+    try (InputStream is = minioClient.getObject(this.bucketName, name)) {
 
-      return OBJECT_MAPPER.readValue(is, Note.class);
+      return fromJson(is, Note.class);
 
     } catch (final Exception e) {
       throw new RuntimeException(e);
@@ -219,10 +219,10 @@ public final class MinioDataAccess implements DataAccess {
 
   private void writeObject(final String name, final Object obj) {
 
-    try ( PipedInputStream pis = new PipedInputStream();//
-        PipedOutputStream pos = new PipedOutputStream(pis)) {
+    try (PipedInputStream pis = new PipedInputStream();//
+      PipedOutputStream pos = new PipedOutputStream(pis)) {
 
-      OBJECT_MAPPER.writeValue(pos, obj);
+      toJson(pos, obj);
       minioClient.putObject(this.bucketName, name, pis, MediaType.APPLICATION_JSON);
 
     } catch (final Exception e) {

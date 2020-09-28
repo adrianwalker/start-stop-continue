@@ -2,15 +2,15 @@ package org.adrianwalker.startstopcontinue.pubsub;
 
 public final class Event {
 
-  private String id;
+  private String sessionId;
   private String data;
 
-  public String getId() {
-    return id;
+  public String getSessionId() {
+    return sessionId;
   }
 
-  public Event setId(final String id) {
-    this.id = id;
+  public Event setSessionId(final String sessionId) {
+    this.sessionId = sessionId;
     return this;
   }
 

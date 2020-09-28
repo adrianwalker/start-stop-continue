@@ -55,7 +55,7 @@ public final class EventSocket {
       return;
     }
 
-    eventPubSub.publish(getBoardId(session), new Event().setId(session.getId()).setData(message));
+    eventPubSub.publish(getBoardId(session), new Event().setSessionId(session.getId()).setData(message));
   }
 
   @OnClose
@@ -85,7 +85,7 @@ public final class EventSocket {
 
     SESSIONS.get(boardId).stream()
       .filter(session -> session.isOpen())
-      .filter(openSession -> !openSession.getId().equals(event.getId()))
+      .filter(openSession -> !openSession.getId().equals(event.getSessionId()))
       .forEach(peerSession -> {
         try {
           peerSession.getBasicRemote().sendText(event.getData());
@@ -95,7 +95,7 @@ public final class EventSocket {
       });
   }
 
-  private UUID getBoardId(final Session session) {
+  private static UUID getBoardId(final Session session) {
 
     return UUID.fromString(session.getPathParameters().get(BOARD_ID));
   }

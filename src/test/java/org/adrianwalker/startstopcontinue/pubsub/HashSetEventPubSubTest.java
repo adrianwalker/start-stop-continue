@@ -16,12 +16,12 @@ public final class HashSetEventPubSubTest {
     String eventData = "test data";
 
     Event event = new Event()
-      .setId(eventId)
+      .setSessionId(eventId)
       .setData(eventData);
 
     BiConsumer<UUID, Event> consumer = (b, e) -> {
       assertEquals(boardId, b);
-      assertEquals(eventId, e.getId());
+      assertEquals(eventId, e.getSessionId());
       assertEquals(eventData, e.getData());
     };
 

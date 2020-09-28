@@ -6,6 +6,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import org.adrianwalker.startstopcontinue.cache.NonCachingCache;
 import org.adrianwalker.startstopcontinue.dataaccess.DataAccess;
+import org.adrianwalker.startstopcontinue.pubsub.EventPubSub;
+import org.adrianwalker.startstopcontinue.pubsub.HashSetEventPubSub;
 import org.adrianwalker.startstopcontinue.service.Service;
 import org.junit.Test;
 import static org.junit.Assert.*;
@@ -29,12 +31,14 @@ public final class WebServletTest {
   private DataAccess dataAccess;
 
   private ExecutorService executorService;
+  private EventPubSub eventPubSub;
 
   @Before
   public void setUp() throws Exception {
 
     MockitoAnnotations.initMocks(this);
     executorService = Executors.newFixedThreadPool(THREADS);
+    eventPubSub = new HashSetEventPubSub();
   }
 
   @Test
@@ -43,7 +47,9 @@ public final class WebServletTest {
     Service service = new Service(
       dataAccess,
       new NonCachingCache(boardId -> dataAccess.readBoard(boardId)),
-      executorService, 0);
+      executorService, 
+      eventPubSub,
+      0);
     WebServlet servlet = new WebServlet(service, 0);
     servlet.doGet(request, response);
 

@@ -11,19 +11,28 @@ import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 import org.adrianwalker.startstopcontinue.cache.Cache;
 import static org.adrianwalker.startstopcontinue.Monitoring.logFileDescriptors;
+import org.adrianwalker.startstopcontinue.pubsub.Event;
+import org.adrianwalker.startstopcontinue.pubsub.EventPubSub;
+
+
 
 public final class Service {
 
   private final DataAccess dataAccess;
   private final Cache cache;
   private final ExecutorService executor;
+  private final EventPubSub eventPubSub;
   private final int maxNoteLength;
 
-  public Service(final DataAccess dataAccess, final Cache cache, final ExecutorService executor, final int maxNoteLength) {
+  public Service(
+    final DataAccess dataAccess, final Cache cache,
+    final ExecutorService executor, final EventPubSub eventPubSub,
+    final int maxNoteLength) {
 
     this.dataAccess = dataAccess;
     this.cache = cache;
     this.executor = executor;
+    this.eventPubSub = eventPubSub;
     this.maxNoteLength = maxNoteLength;
   }
 
@@ -63,7 +72,7 @@ public final class Service {
 
   public final void unlockBoard(final UUID boardId) {
 
-    executor.submit(() -> {
+    executor.execute(() -> {
       dataAccess.unlockBoard(boardId);
       cache.unlock(boardId);
     });
@@ -89,16 +98,16 @@ public final class Service {
     logFileDescriptors();
   }
 
-  public final void updateNote(final UUID boardId, final Column column, final Note data) {
+  public final void updateNote(final UUID boardId, final Column column, final Note note) {
 
     checkLock(boardId);
 
-    Note note = cache.read(boardId, column, data.getId())
-      .setText(truncateNoteText(data.getText()));
+    Note update = cache.read(boardId, column, note.getId())
+      .setText(truncateNoteText(note.getText()));
 
     executor.execute(() -> {
-      dataAccess.updateNote(boardId, column, note);
-      cache.write(boardId, column, note);
+      dataAccess.updateNote(boardId, column, update);
+      cache.write(boardId, column, update);
     });
 
     logMemoryUsage();
@@ -112,6 +121,16 @@ public final class Service {
     executor.execute(() -> {
       dataAccess.deleteNote(boardId, column, noteId);
       cache.delete(boardId, column, noteId);
+    });
+
+    logMemoryUsage();
+    logFileDescriptors();
+  }
+
+  public final void publishEvent(final UUID boardId, final Event event) {
+
+    executor.execute(() -> {
+      eventPubSub.publish(boardId, event);
     });
 
     logMemoryUsage();
@@ -137,12 +156,12 @@ public final class Service {
   }
 
   public long cacheSize() {
-    
+
     return cache.size();
   }
 
   public void cachePurge() {
-    
+
     cache.purge();
   }
 }

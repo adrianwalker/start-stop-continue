@@ -43,11 +43,9 @@ $(function () {
 
   boardLocked = false;
 
-  webSocket = createWebSocket(function () {
-    loadBoard(boardId);
-  });
+  webSocket = createWebSocket();
 
-  startWebSocketPing(60 * 1000);
+  loadBoard(boardId);
 
   $("#add-start").click(function () {
     addStart(boardId);
@@ -116,11 +114,10 @@ $(function () {
     lockBoard(boardId).done(function (data) {
 
       setBoardLocked(true);
-      sendEvent({
+      sendEvent(boardId, {
         boardId: boardId,
         locked: true
       });
-
     }).fail(handleFailure);
   }
 
@@ -201,12 +198,11 @@ $(function () {
 
       $("li[server-id='" + data.id + "']").remove();
 
-      sendEvent({
+      sendEvent(boardId, {
         boardId: boardId,
         column: column,
         note: {
           id: data.id,
-          color: note.color,
           text: text
         }});
 
@@ -223,7 +219,7 @@ $(function () {
 
       $("#" + note.id).attr("server-id", data.id);
 
-      sendEvent({
+      sendEvent(boardId, {
         boardId: boardId,
         column: column,
         note: {
@@ -243,12 +239,11 @@ $(function () {
 
     updateNote(boardId, column, {id: serverId, text: text}).done(function (data) {
 
-      sendEvent({
+      sendEvent(boardId, {
         boardId: boardId,
         column: column,
         note: {
           id: data.id,
-          color: note.color,
           text: text
         }});
 
@@ -302,7 +297,17 @@ $(function () {
     });
   }
 
-  function createWebSocket(callback) {
+  function postEvent(boardId, event) {
+
+    return $.ajax({
+      url: "api/board/" + boardId + "/event",
+      data: JSON.stringify(event),
+      type: 'POST',
+      contentType: 'application/json'
+    });
+  }
+
+  function createWebSocket() {
 
     var url, webSocket;
 
@@ -310,11 +315,15 @@ $(function () {
     webSocket = new WebSocket(url);
 
     webSocket.onopen = function (event) {
-      callback();
+      startWebSocketPing(60 * 1000);
     };
 
     webSocket.onmessage = function (event) {
       handleEvent(JSON.parse(event.data));
+    };
+
+    webSocket.onerror = function (event) {
+      console.error("WebSocket error:", event);
     };
 
     return webSocket;
@@ -330,20 +339,24 @@ $(function () {
     return webSocket.readyState === webSocket.OPEN;
   }
 
-  function sendEvent(event) {
+  function sendEvent(boardId, event) {
 
-    var send = function () {
-      webSocket.send(JSON.stringify(event));
-    };
+    var send;
 
     if (isWebSocketOpen(webSocket)) {
-      send();
+      send = function () {
+        webSocket.send(JSON.stringify(event));
+      };
     } else {
-      webSocket = createWebSocket(function () {
-        send();
-        loadBoard(boardId);
-      });
+      send = function () {
+        postEvent(boardId, {
+          sessionId: '',
+          data: JSON.stringify(event)
+        }).fail(handleFailure);
+      };
     }
+
+    send();
   }
 
   function sendPing() {
@@ -417,7 +430,7 @@ $(function () {
 
   function handleFailure(jqXHR, textStatus, errorThrown) {
 
-    var message, error;
+    var message;
 
     if (jqXHR) {
       message = jqXHR.responseText;
@@ -426,6 +439,13 @@ $(function () {
     if (!message) {
       message = errorThrown;
     }
+
+    showError(message);
+  }
+
+  function showError(message) {
+
+    var error;
 
     if (!message) {
       message = "That didn't work";
