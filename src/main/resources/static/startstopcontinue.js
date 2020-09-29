@@ -43,7 +43,9 @@ $(function () {
 
   boardLocked = false;
 
-  webSocket = createWebSocket();
+  webSocket = createWebSocket(function () {
+    startWebSocketPing(60 * 1000);
+  });
 
   loadBoard(boardId);
 
@@ -114,7 +116,7 @@ $(function () {
     lockBoard(boardId).done(function (data) {
 
       setBoardLocked(true);
-      sendEvent(boardId, {
+      sendEvent({
         boardId: boardId,
         locked: true
       });
@@ -198,7 +200,7 @@ $(function () {
 
       $("li[server-id='" + data.id + "']").remove();
 
-      sendEvent(boardId, {
+      sendEvent({
         boardId: boardId,
         column: column,
         note: {
@@ -219,7 +221,7 @@ $(function () {
 
       $("#" + note.id).attr("server-id", data.id);
 
-      sendEvent(boardId, {
+      sendEvent({
         boardId: boardId,
         column: column,
         note: {
@@ -239,7 +241,7 @@ $(function () {
 
     updateNote(boardId, column, {id: serverId, text: text}).done(function (data) {
 
-      sendEvent(boardId, {
+      sendEvent({
         boardId: boardId,
         column: column,
         note: {
@@ -307,7 +309,7 @@ $(function () {
     });
   }
 
-  function createWebSocket() {
+  function createWebSocket(callback) {
 
     var url, webSocket;
 
@@ -315,7 +317,7 @@ $(function () {
     webSocket = new WebSocket(url);
 
     webSocket.onopen = function (event) {
-      startWebSocketPing(60 * 1000);
+      callback();
     };
 
     webSocket.onmessage = function (event) {
@@ -339,24 +341,26 @@ $(function () {
     return webSocket.readyState === webSocket.OPEN;
   }
 
-  function sendEvent(boardId, event) {
+  function sendEvent(event) {
 
-    var send;
+    var send, post;
+
+    send = function () {
+      webSocket.send(JSON.stringify(event));
+    };
+
+    post = function (boardId) {
+      postEvent(boardId, {
+        sessionId: '',
+        data: JSON.stringify(event)
+      }).fail(handleFailure);
+    };
 
     if (isWebSocketOpen(webSocket)) {
-      send = function () {
-        webSocket.send(JSON.stringify(event));
-      };
+      send();
     } else {
-      send = function () {
-        postEvent(boardId, {
-          sessionId: '',
-          data: JSON.stringify(event)
-        }).fail(handleFailure);
-      };
+      post(boardId);
     }
-
-    send();
   }
 
   function sendPing() {
