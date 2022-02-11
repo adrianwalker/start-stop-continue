@@ -23,8 +23,8 @@ public final class CacheCommand implements Command {
     if (command.length < 2) {
       return "usage: cache [size|purge]";
     }
-    
-    if("size".equals(command[1])) {
+
+    if ("size".equals(command[1])) {
       return size();
     } else if ("purge".equals(command[1])) {
       return purge();
@@ -34,7 +34,7 @@ public final class CacheCommand implements Command {
   }
 
   private String size() {
-    
+
     long cacheSize = service.cacheSize();
     return format("cacheSize = %s", cacheSize);
   }

@@ -61,7 +61,7 @@ public final class CommandLineInterface {
   private void accept(final Socket socket) throws InterruptedException, ExecutionException {
 
     new Thread(() -> {
-      try ( OutputStream os = socket.getOutputStream();  InputStream is = socket.getInputStream();) {
+      try (OutputStream os = socket.getOutputStream(); InputStream is = socket.getInputStream();) {
 
         Scanner scanner = new Scanner(is);
         PrintWriter writer = new PrintWriter(os);

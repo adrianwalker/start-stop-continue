@@ -44,7 +44,7 @@ $(function () {
   boardLocked = false;
 
   webSocket = createWebSocket(function () {
-    startWebSocketPing(60 * 1000);
+    startWebSocketPing(10 * 1000);
   });
 
   loadBoard(boardId);

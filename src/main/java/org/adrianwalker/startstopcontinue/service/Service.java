@@ -14,8 +14,6 @@ import static org.adrianwalker.startstopcontinue.Monitoring.logFileDescriptors;
 import org.adrianwalker.startstopcontinue.pubsub.Event;
 import org.adrianwalker.startstopcontinue.pubsub.EventPubSub;
 
-
-
 public final class Service {
 
   private final DataAccess dataAccess;

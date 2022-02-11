@@ -158,13 +158,13 @@ public final class LinkedHashMapLRUCache implements Cache {
 
   @Override
   public long size() {
-    
+
     return cache.size();
   }
 
   @Override
   public void purge() {
-    
+
     cache.clear();
   }
 

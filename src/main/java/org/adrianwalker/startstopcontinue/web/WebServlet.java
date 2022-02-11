@@ -101,6 +101,7 @@ public final class WebServlet extends HttpServlet {
 
     response.setContentType(MediaType.TEXT_HTML);
     response.setContentLength(html.length);
+    response.flushBuffer();
 
     try (OutputStream os = response.getOutputStream()) {
 
