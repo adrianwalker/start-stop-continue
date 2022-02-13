@@ -18,9 +18,12 @@ import java.util.stream.Stream;
 import org.adrianwalker.startstopcontinue.model.Board;
 import org.adrianwalker.startstopcontinue.model.Note;
 import org.adrianwalker.startstopcontinue.model.Column;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public abstract class FileSystemDataAccess implements DataAccess {
 
+  private final static Logger LOGGER = LoggerFactory.getLogger(FileSystemDataAccess.class);
   private static final Comparator<Note> NOTE_COMPARATOR = (n1, n2) -> n1.getCreated().compareTo(n2.getCreated());
   private static final BinaryOperator<List<Note>> NOTE_MERGER = (l, r) -> {
     r.addAll(l);
@@ -122,8 +125,8 @@ public abstract class FileSystemDataAccess implements DataAccess {
 
   private Stream<Path> filesList(final Path path) {
 
-    try ( Stream<Path> stream = Files.list(path)) {
-      return stream.collect(toList()).stream().parallel();
+    try (Stream<Path> stream = Files.list(path)) {
+      return stream.collect(toList()).stream();
     } catch (final IOException ioe) {
       throw new RuntimeException(ioe);
     }
@@ -131,7 +134,9 @@ public abstract class FileSystemDataAccess implements DataAccess {
 
   private Map<Column, List<Note>> readNotes(final UUID boardId) {
 
-    return Stream.of(Column.values()).parallel()
+    long start = System.currentTimeMillis();
+
+    Map<Column, List<Note>> notes = Stream.of(Column.values())
       .map(
         column -> entry(
           column,
@@ -152,6 +157,13 @@ public abstract class FileSystemDataAccess implements DataAccess {
           .collect(toList()),
         NOTE_MERGER,
         ENUM_MAP_SUPPLIER));
+
+    long end = System.currentTimeMillis();
+    long duration = end - start;
+
+    LOGGER.info("boardId = {}, duration = {}", boardId, duration);
+    
+    return notes;
   }
 
   private boolean locked(final UUID boardId) {

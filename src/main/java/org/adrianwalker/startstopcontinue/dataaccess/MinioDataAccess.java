@@ -142,7 +142,7 @@ public final class MinioDataAccess implements DataAccess {
 
   private Map<Column, List<Note>> readNotes(final UUID boardId) {
 
-    return Stream.of(Column.values()).parallel()
+    return Stream.of(Column.values())
       .map(
         column -> entry(
           column,

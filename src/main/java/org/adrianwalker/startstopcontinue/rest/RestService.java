@@ -18,10 +18,13 @@ import org.adrianwalker.startstopcontinue.model.Column;
 import org.adrianwalker.startstopcontinue.model.Note;
 import org.adrianwalker.startstopcontinue.pubsub.Event;
 import org.adrianwalker.startstopcontinue.service.Service;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Path("")
 public class RestService {
 
+  private final static Logger LOGGER = LoggerFactory.getLogger(RestService.class);
   private static final Map<String, String> HTML_ESCAPE = of(
     "<", "&lt;",
     ">", "&gt;"
@@ -42,9 +45,18 @@ public class RestService {
     @PathParam("boardId")
     final UUID boardId) {
 
-    return Response
+    long start = System.currentTimeMillis();
+
+    Response response = Response
       .ok(service.readBoard(boardId))
       .build();
+
+    long end = System.currentTimeMillis();
+    long duration = end - start;
+
+    LOGGER.info("boardId = {}, duration = {}", boardId, duration);
+
+    return response;
   }
 
   @POST
