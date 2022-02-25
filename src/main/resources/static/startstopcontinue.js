@@ -313,7 +313,7 @@ $(function () {
 
     var url, webSocket, protocol;
 
-    protocol = location.protocol === "https" ? "wss:" : "ws:"; 
+    protocol = location.protocol === "https:" ? "wss:" : "ws:"; 
     url = protocol + "//" + window.location.host + window.location.pathname + "events/" + boardId;
     webSocket = new WebSocket(url);
 
