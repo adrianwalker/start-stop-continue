@@ -311,9 +311,10 @@ $(function () {
 
   function createWebSocket(callback) {
 
-    var url, webSocket;
+    var url, webSocket, protocol;
 
-    url = "ws://" + window.location.host + window.location.pathname + "events/" + boardId;
+    protocol = location.protocol === "https" ? "wss:" : "ws:"; 
+    url = protocol + "//" + window.location.host + window.location.pathname + "events/" + boardId;
     webSocket = new WebSocket(url);
 
     webSocket.onopen = function (event) {
