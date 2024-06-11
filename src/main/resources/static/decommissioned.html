@@ -1,0 +1,273 @@
+<html>
+    <head>
+        <title>STart SToP CoNTinue - ststpcnt.com</title>
+        <meta charset="utf-8">
+        <meta name="description" content="Start / Stop / Continue retrospective virtual post-it note board">
+        <link rel="icon" href="data:image/x-icon;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAAAOElEQVRYw+3OMQEAIAgAQbQS/RtgJqyAk8v9/MOt6uoYlCfeytm243MAAAAAAAAAAAAAAAAAAAAX/O0FCRfx+ZoAAAAASUVORK5CYII=" sizes="32x32" type="image/png">
+        <link rel="stylesheet" type="text/css" href="https://fonts.googleapis.com/css?family=Reenie+Beanie:regular">
+        <style media="screen and (min-device-width: 800px)">
+            *{
+                margin:0;
+                padding:0
+            }
+            body{
+                font-family:arial,sans-serif;
+                font-size:100%;
+                margin-top:1em;
+                background:#666;
+                color:#fff
+            }
+            a{
+                position:fixed;
+                bottom:1em;
+                right:1em
+            }
+            a svg{
+                color:black
+            }
+            div{
+                margin-top:3em;
+                width:33.33%;
+                float:left;
+                text-align:center
+            }
+            ul,li{
+                list-style:none;
+                display:inline-block
+            }
+            ul{
+                width:100%;
+                overflow:hidden;
+                padding-top:1em;
+                padding-bottom:2em
+            }
+            ul li{
+                text-decoration:none;
+                color:#000;
+                display:block;
+                height:12em;
+                width:12em;
+                padding:1em;
+                box-shadow:5px 5px 7px rgba(33,33,33,.7);
+                transition:transform .15s linear
+            }
+            ul li{
+                margin:1em;
+                display:inline-block
+            }
+            ul li textarea{
+                font-family:"Reenie Beanie",arial,sans-serif;
+                font-size:150%;
+                display:inline-block;
+                width:inherit;
+                height:inherit;
+                resize:none;
+                overflow-wrap:break-word;
+                overflow-x:hidden;
+                overflow-y:auto;
+                background:0;
+                border:0
+            }
+            ul li{
+                transform:rotate(-6deg)
+            }
+            ul li:nth-child(even){
+                transform:rotate(4deg);
+                position:relative;
+                top:5px
+            }
+            ul li:nth-child(3n){
+                transform:rotate(-3deg);
+                position:relative;
+                top:-5px
+            }
+            ul li:nth-child(5n){
+                transform:rotate(5deg);
+                position:relative;
+                top:-10px
+            }
+            ul li:hover,ul li:focus{
+                box-shadow:10px 10px 7px rgba(0,0,0,.7);
+                transform:scale(1.25);
+                position:relative;
+                z-index:5
+            }
+            ol{
+                text-align:center;
+                position:fixed;
+                padding-top:1em;
+                padding-bottom:1em;
+                top:0;
+                width:inherit;
+                z-index:1000;
+                background:#666
+            }
+            ol li{
+                display:inline
+            }
+            ol li button{
+                color:#fff;
+                background:0;
+                border:0;
+                padding:0;
+                font-family:"Reenie Beanie",arial,sans-serif;
+                font-size:175%;
+                text-decoration:underline;
+                cursor:pointer
+            }
+            ol li input[type="color"]{
+                border:0;
+                background:0
+            }
+            @media screen and (-ms-high-contrast:active),(-ms-high-contrast:none){
+                .colour-picker{
+                    display:none
+                }
+            }
+            #lock{
+                position:fixed;
+                bottom:1em;
+                right:4em;
+                cursor:pointer
+            }
+            #locked{
+                display:none
+            }
+            #unlocked{
+                display:none
+            }
+            #error{
+                display:none;
+                position:fixed;
+                z-index:2000;
+                left:0;
+                top:0;
+                width:100%;
+                height:100%;
+                margin:0;
+                padding-top:1em;
+                overflow:auto;
+                background-color:rgba(102,102,102,0.8)
+            }
+        </style>
+        <style media="screen and (max-device-width: 800px)">
+            *{
+                margin:0;
+                padding:0
+            }
+            body{
+                background:#666;
+                color:#fff;
+                font-family:arial,sans-serif;
+                font-size:xx-large
+            }
+            a{
+                position:fixed;
+                bottom:1em;
+                right:1em
+            }
+            a svg{
+                color:black
+            }
+            div{
+                margin-top:3em;
+                width:33.33%;
+                float:left
+            }
+            ul,li{
+                list-style:none
+            }
+            ul li{
+                text-decoration:none;
+                color:#000;
+                height:8em;
+                padding:.5em
+            }
+            ul li textarea{
+                font-family:arial,sans-serif;
+                font-size:xx-large;
+                width:100%;
+                height:inherit;
+                resize:none;
+                overflow-wrap:break-word;
+                overflow-x:hidden;
+                overflow-y:auto;
+                background:0;
+                border:0
+            }
+            ol{
+                text-align:center;
+                position:fixed;
+                top:0;
+                width:inherit;
+                z-index:1000;
+                background:#666
+            }
+            ol li{
+                display:inline-block;
+                width:100%
+            }
+            ol li button{
+                width:100%;
+                color:#fff;
+                background:0;
+                border:0;
+                padding-top:1em;
+                padding-bottom:1em;
+                font-family:arial,sans-serif;
+                font-size:xx-large;
+                text-transform:uppercase
+            }
+            ol li input[type="color"]{
+                border:0;
+                background:0;
+                height:3em
+            }
+            span{
+                display:none
+            }
+            #error{
+                display:none;
+                position:fixed;
+                z-index:2000;
+                left:0;
+                top:0;
+                width:100%;
+                height:100%;
+                margin:0;
+                overflow:auto;
+                background-color:rgba(102,102,102,0.8)
+            }
+        </style>      
+    </head>
+    <body>
+        <div id="start">
+            <ol>
+                <li><span class="colour-picker"><input id="start-color" type="color" value="#ccffcc"></span><button id="add-start">Start<span> (click to add)</span></button></li>
+            </ol>
+            <ul id="start-list"></ul>
+        </div>
+        <div id="stop">
+            <ol>
+                <li><span class="colour-picker"><input id="stop-color" type="color" value="#ffcccc"></span><button id="add-stop">Stop<span> (click to add)</span></button></li>
+            </ol>
+            <ul id="stop-list"></ul>
+        </div>
+        <div id="continue">
+            <ol>
+                <li><span class="colour-picker"><input id="continue-color" type="color" value="#ffffcc"></span><button id="add-continue">Continue<span> (click to add)</span></button></li>
+            </ol>
+            <ul id="continue-list"></ul>
+        </div>
+        <div id="error" style="display: block;">
+            <ul id="error-list">
+                <li id="error-note" style="background-color: #ffcccc"><textarea>This site has been decommissioned.</textarea></li>
+         </ul>
+      </div>
+      <span>
+          <a href="https://github.com/adrianwalker/start-stop-continue" target="_blank">
+              <img src="https://raw.githubusercontent.com/adrianwalker/start-stop-continue/master/src/main/resources/static/github.svg" height="32" width="32" title="Fork me on GitHub">
+          </a>
+      </span>
+   </body>
+</html>
